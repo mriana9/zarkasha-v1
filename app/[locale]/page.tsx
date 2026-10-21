@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getDictionary } from "@/lib/dictionary";
 import { Header } from "@/components/layout/Header";
-import { HeroSection } from "@/components/home/HeroSection";
+import { HeroSection } from "@/components/home/hero/HeroSection";
 
 interface PageProps {
   params: Promise<{ locale: "ar" | "en" }>;
