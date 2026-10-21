@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getDictionary } from "@/lib/dictionary";
 import { Header } from "@/components/layout/Header";
 import { HeroSection } from "@/components/home/hero/HeroSection";
+import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { MarqueeSection } from "@/components/home/hero/MarqueeSection";
 
 interface PageProps {
@@ -14,6 +15,7 @@ async function HomeContent({ params }: PageProps) {
 
   return (
     <>
+      <AnnouncementBar dict={dict.AnnouncementBar} />
       <Header
         dict={dict.Header}
         searchDict={dict.Search}
