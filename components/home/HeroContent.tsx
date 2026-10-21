@@ -25,7 +25,7 @@ export function HeroContent({ dict, onExplore, onStory }: HeroContentProps) {
         {dict.eyebrow}
       </div>
 
-      <h1 className="my-[25px] text-burgundy font-amiri text-[clamp(45px,5.4vw,88px)] font-normal leading-[0.98] tracking-[-0.045em]">
+      <h1 className="my-[25px] text-burgundy font-amiri text-[clamp(45px,5.4vw,88px)] font-normal leading-[1.2] tracking-[-0.045em]">
         {dict.titleLine1}
         <br />
         <span className="text-olive font-normal">{dict.titleLine2}</span>
