@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getDictionary } from "@/lib/dictionary";
 import { Header } from "@/components/layout/Header";
 import { HeroSection } from "@/components/home/hero/HeroSection";
+import { MarqueeSection } from "@/components/home/hero/MarqueeSection";
 
 interface PageProps {
   params: Promise<{ locale: "ar" | "en" }>;
@@ -20,6 +21,7 @@ async function HomeContent({ params }: PageProps) {
         locale={locale}
       />
       <HeroSection dict={dict.Hero} />
+      <MarqueeSection items={dict.Marquee} />
     </>
   );
 }
