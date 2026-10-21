@@ -1,20 +1,39 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  Amiri,
+  Tajawal,
+  Playfair_Display,
+  Plus_Jakarta_Sans,
+} from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const amiri = Amiri({
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  variable: "--font-amiri",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const tajawal = Tajawal({
+  subsets: ["arabic"],
+  weight: ["400", "500", "700"],
+  variable: "--font-tajawal",
+});
+
+const playfair = Playfair_Display({
   subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-playfair",
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-plus-jakarta",
 });
 
 export const metadata: Metadata = {
-  title: "Zarkasha | زركشة",
-  description: "متجر للمنتجات والحرف الفلسطينية التقليدية",
+  title: "Zarkasha | UI Kit & Design System",
+  description: "Zarkasha Design System",
 };
 
 export default function RootLayout({
@@ -26,9 +45,9 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${amiri.variable} ${tajawal.variable} ${playfair.variable} ${plusJakarta.variable}`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="antialiased min-h-screen">{children}</body>
     </html>
   );
 }
