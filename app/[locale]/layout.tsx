@@ -1,14 +1,16 @@
-export async function generateStaticParams() {
-  return [{ locale: "ar" }, { locale: "en" }];
+import type { ReactNode } from "react";
+
+export const instant = false;
+
+interface LocaleLayoutProps {
+  children: ReactNode;
+  params: Promise<{ locale: string }>;
 }
 
 export default async function LocaleLayout({
   children,
   params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}) {
+}: LocaleLayoutProps) {
   const { locale } = await params;
 
   return (

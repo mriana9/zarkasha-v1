@@ -21,5 +21,16 @@
   "Cart": {
     "title": "سلة التسوق",
     "empty": "سلة التسوق فارغة حالياً"
+  },
+  "Hero": {
+    "eyebrow": "حكاية تُروى بالخيط",
+    "titleLine1": "من خيوط تراثنا...",
+    "titleLine2": "تُحاك حكايتنا",
+    "description": "قطع فلسطينية مطرّزة بحب، تجمع أصالة التراث وجمال التفاصيل، لترافقكِ في كل حكاية.",
+    "primaryButton": "اكتشفي منتجاتنا",
+    "secondaryButton": "تعرّفي على حكايتنا",
+    "signatureChart": "ز",
+    "signatureTitle": "أصالة",
+    "signatureSubtitle": "بتفاصيل معاصرة"
   }
 }

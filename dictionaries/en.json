@@ -21,5 +21,16 @@
   "Cart": {
     "title": "Shopping Cart",
     "empty": "Your cart is currently empty"
+  },
+  "Hero": {
+    "eyebrow": "A story told in thread",
+    "titleLine1": "From the threads of our heritage...",
+    "titleLine2": "Our story is woven",
+    "description": "Handcrafted Palestinian embroidered pieces uniting heritage and intricate details to accompany every story.",
+    "primaryButton": "Discover Products",
+    "secondaryButton": "Learn Our Story",
+    "signatureChart": "Z",
+    "signatureTitle": "Authenticity",
+    "signatureSubtitle": "with modern details"
   }
 }
