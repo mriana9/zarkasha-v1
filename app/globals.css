@@ -8,11 +8,11 @@
 }
 
 @theme {
-  --color-brand-burgundy: #5d1826;
-  --color-brand-blush: #d8a0a5;
-  --color-brand-ivory: #fffcf9;
-  --color-brand-olive: #7b843d;
-  --color-brand-beige: #ede0d9;
+  --color-burgundy: #5d1826;
+  --color-blush: #d8a0a5;
+  --color-ivory: #fffcf9;
+  --color-olive: #7b843d;
+  --color-beige: #ede0d9;
 
   --font-amiri: var(--font-amiri), serif;
   --font-tajawal: var(--font-tajawal), sans-serif;

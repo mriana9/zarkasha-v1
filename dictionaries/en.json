@@ -1,0 +1,25 @@
+{
+  "AnnouncementBar": {
+    "text": "Pieces that tell a story — New collection launching soon"
+  },
+  "Header": {
+    "contact": "Contact Us",
+    "ariaMenu": "Open Menu",
+    "ariaSearch": "Search",
+    "ariaCart": "Shopping Cart",
+    "ariaLang": "Change Language",
+    "home": "Home",
+    "shop": "Shop",
+    "story": "Our Story",
+    "footerTagline": "Palestinian pieces. Embroidered with love."
+  },
+  "Search": {
+    "eyebrow": "Search in Zarqasha",
+    "placeholder": "What are you looking for?",
+    "notice": "Search will query products once catalog is connected."
+  },
+  "Cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is currently empty"
+  }
+}
