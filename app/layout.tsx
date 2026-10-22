@@ -31,9 +31,15 @@ const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
 });
 
+
 export const metadata: Metadata = {
-  title: "Zarkasha | UI Kit & Design System",
-  description: "Zarkasha Design System",
+  title: "زركشة | تطريز فلسطيني أصيل",
+  description: "علامة فلسطينية تحتفي بجمال التطريز وبالقطع التي تحمل حكاية.",
+  icons: {
+    icon: "/logo/logo.png", 
+    shortcut: "/logo/logo.png",
+    apple: "/logo/logo.png", 
+  },
 };
 
 export default function RootLayout({
