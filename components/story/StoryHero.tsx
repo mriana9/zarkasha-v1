@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 interface StoryHeroProps {
   dict: {
@@ -22,14 +23,25 @@ export function StoryHero({ dict, locale }: StoryHeroProps) {
     <section className="min-h-[680px] grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] bg-[#fff8f6]">
       <div className="min-h-[500px] lg:min-h-[680px] relative overflow-hidden bg-[#fff8f6]">
         <div className="w-[84%] h-full absolute right-0 top-0 overflow-hidden">
-          <Image
-            src="/story/story-bg.jpg"
-            alt="تفاصيل تطريز فلسطيني يدوي من زركشة"
-            fill
-            className="object-cover transition-transform duration-1100 hover:scale-102"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[rgba(69,16,27,0.13)]" />
+          <motion.div
+            initial={{ scale: 1.25, opacity: 0.8 }}
+            animate={{ scale: 1, opacity: 1 }}
+            whileHover={{ scale: 1.05 }}
+            transition={{
+              scale: { duration: 1.8, ease: [0.25, 1, 0.5, 1] },
+              opacity: { duration: 1.2 },
+            }}
+            className="relative w-full h-full"
+          >
+            <Image
+              src="/story/story-bg.jpg"
+              alt="تفاصيل تطريز فلسطيني يدوي من زركشة"
+              fill
+              className="object-cover"
+              priority
+            />
+          </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[rgba(69,16,27,0.13)] pointer-events-none z-10" />
         </div>
 
         <div className="w-[31%] h-[35%] absolute left-[3%] bottom-[8%] z-20 overflow-hidden border-[9px] border-[#fff8f6] shadow-lg">
