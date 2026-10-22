@@ -186,5 +186,70 @@
       "item3Title": "Custom Pieces",
       "item3Desc": "Designs that reflect your own story"
     }
+  },
+  "StoryPage": {
+    "breadcrumb": { "home": "Home", "current": "Our Story" },
+    "signatureChart": "Z",
+    "heroIndex": "From Palestine, with thread and love",
+    "kicker": "The Zarkasha Tale",
+    "titlePart1": "Every Stitch",
+    "titlePart2": "Preserves a Memory",
+    "description": "Zarkasha is a space that celebrates Palestinian embroidery as a living art; we carry it with us, rediscover it, and give it a place in everyday details.",
+    "signature": "Authenticity with contemporary details",
+    "manifestoKicker": "What We Believe In",
+    "manifestoTextPart1": "We don't just make a beautiful piece;",
+    "manifestoTextPart2": " we give the thread space to tell",
+    "manifestoTextHighlight": " about a land, a memory, and a people.",
+    "originKicker": "When Heritage Becomes Part of Our Day",
+    "originTitlePart1": "From an Ancient Motif,",
+    "originTitlePart2": "A New Piece is Born",
+    "originLead": "We see heritage as a living extension, not a distant image. Therefore, we seek balance between the authenticity of embroidery and the simplicity of the piece that accompanies you today.",
+    "originText": "At Zarkasha, every idea starts with meaning: a color that recalls a memory, a pattern that carries identity, or a gift we want to say what words cannot. From here, details quietly form to make each piece close to the heart.",
+    "chaptersKicker": "Three Threads Unite Our Story",
+    "chaptersTitle": "Between Memory, Hand, and Heart",
+    "chapters": [
+      {
+        "number": "01",
+        "title": "Memory",
+        "text": "We draw our motifs from rich Palestinian heritage to keep the story alive."
+      },
+      {
+        "number": "02",
+        "title": "Hand",
+        "text": "We celebrate manual work and precision in perfecting every stitch and detail."
+      },
+      {
+        "number": "03",
+        "title": "Heart",
+        "text": "We craft pieces that mean something real and accompany your closest moments."
+      }
+    ],
+    "craftKicker": "From Idea to Piece",
+    "craftTitlePart1": "A Journey Starting with a Detail,",
+    "craftTitlePart2": "Ending with a Story That Belongs to You",
+    "process": [
+      {
+        "title": "Inspiration",
+        "text": "Researching heritage motifs and contemplating their deep details."
+      },
+      {
+        "title": "Design",
+        "text": "Matching colors and lines to suit contemporary use."
+      },
+      {
+        "title": "Embroidery",
+        "text": "Executing stitches with care and professional hands."
+      },
+      {
+        "title": "Presentation",
+        "text": "Packaging the piece with love to reach you in its finest form."
+      }
+    ],
+    "closingKicker": "The Story Continues",
+    "closingTitlePart1": "A Piece of You,",
+    "closingTitlePart2": "And a New Chapter from Us",
+    "closingText": "Choose a piece that carries meaning, or share your idea with us to craft a unique detail together.",
+    "exploreButton": "Explore Shop",
+    "customLink": "Start a Custom Order"
   }
 }
