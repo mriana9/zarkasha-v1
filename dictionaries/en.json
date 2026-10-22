@@ -111,5 +111,48 @@
     "emailLabel": "Your Email",
     "placeholder": "name@example.com",
     "notice": "The form is ready to be linked to a messaging service once server settings are provided."
+  },
+  "Faq": {
+    "title": "Frequently Asked Questions",
+    "items": [
+      {
+        "question": "How do I order?",
+        "answer": "Choose the piece and contact us via WhatsApp or the custom order form above."
+      },
+      {
+        "question": "What is the payment method?",
+        "answer": "Cash on delivery at the moment."
+      },
+      {
+        "question": "Is custom order accepted immediately?",
+        "answer": "No, we review details and confirm with you before accepting the order."
+      }
+    ]
+  },
+  "Footer": {
+    "brandDescription": "A Palestinian brand celebrating the beauty of embroidery and pieces that carry meaning and a story within their threads.",
+    "columns": {
+      "explore": {
+        "title": "Explore",
+        "store": "Shop",
+        "story": "Our Story",
+        "brandKit": "Brand Kit",
+        "customOrders": "Custom Orders"
+      },
+      "help": {
+        "title": "Help",
+        "shipping": "Shipping & Delivery",
+        "returns": "Returns & Exchanges",
+        "faq": "FAQ"
+      },
+      "social": {
+        "title": "Connect With Us",
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "whatsapp": "WhatsApp"
+      }
+    },
+    "rights": "All rights reserved.",
+    "tagline": "Made to Tell a Story"
   }
 }

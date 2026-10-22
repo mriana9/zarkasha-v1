@@ -11,6 +11,7 @@ import { CustomSection } from "@/components/home/custom/CustomSection";
 import { ValuesSection } from "@/components/home/values/ValuesSection";
 import { InstagramSection } from "@/components/home/instagram/InstagramSection";
 import { ContactSection } from "@/components/home/contact/ContactSection";
+import { FaqSection } from "@/components/home/faq/FaqSection";
 
 interface PageProps {
   params: Promise<{ locale: "ar" | "en" }>;
@@ -37,6 +38,7 @@ async function HomeContent({ params }: PageProps) {
       <CustomSection dict={dict.Custom} locale={locale} />
       <ValuesSection dict={dict.Values} />
       <InstagramSection dict={dict.Instagram} />
+      <FaqSection dict={dict.Faq} />
       <ContactSection dict={dict.Contact} />
     </>
   );
