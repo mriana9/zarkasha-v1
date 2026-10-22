@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 export function HeroImages() {
   return (
     <div className="relative min-h-[520px] lg:min-h-[660px]">
-      {/* start-0 للجوال لجعل الصورة full width و lg:start-[15%] للشاشات الكبيرة */}
       <div className="absolute inset-0 start-0 lg:start-[15%] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#45101b]/15 z-10 pointer-events-none" />
 
