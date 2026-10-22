@@ -51,5 +51,13 @@
       "gifts": "Favors & Gifts",
       "customOrders": "Custom Orders"
     }
+  },
+  "Catalog": {
+    "eyebrow": "Zarkasha Selection",
+    "title": "Pieces That Complete Your Story",
+    "description": "The real catalog will appear here once connected to the database. We do not display unconfirmed names, prices, or availability.",
+    "statusTitle": "Collection Under Preparation",
+    "statusSubtitle": "We are meticulously arranging every detail. Follow Zarkasha for the launch date.",
+    "contactButton": "Contact Us"
   }
 }
