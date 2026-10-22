@@ -59,5 +59,20 @@
     "statusTitle": "Collection Under Preparation",
     "statusSubtitle": "We are meticulously arranging every detail. Follow Zarkasha for the launch date.",
     "contactButton": "Contact Us"
+  },
+  "Story": {
+    "kicker": "Our Story Begins With a Thread",
+    "titlePart1": "A Heritage We Cherish,",
+    "titlePart2": "And Beauty We Rediscover",
+    "lead": "At Zarkasha, we view Palestinian embroidery as a language that preserves memory and gives details a meaning beyond beauty.",
+    "description": "This space is prepared for the true story of the brand as told by its founder, from beginnings and inspiration to the vision each piece carries. We have added no personal history or unverified claims.",
+    "buttonText": "Discover the Full Story"
+  },
+  "Custom": {
+    "kicker": "From an Idea to a Piece That Belongs to You",
+    "titlePart1": "A Gift Like No Other,",
+    "titlePart2": "Except Its Owner",
+    "description": "A name, color, occasion, or small detail that carries great meaning. Share your idea with us to begin the story of a custom-designed piece just for you.",
+    "buttonText": "Design Your Custom Piece"
   }
 }
