@@ -251,5 +251,40 @@
     "closingText": "Choose a piece that carries meaning, or share your idea with us to craft a unique detail together.",
     "exploreButton": "Explore Shop",
     "customLink": "Start a Custom Order"
+  },
+  "ContactPage": {
+    "breadcrumb": { "home": "Home", "current": "Contact Us" },
+    "kicker": "We'd Love to Hear From You",
+    "titlePart1": "Have an Idea",
+    "titlePart2": "Waiting to be Embroidered?",
+    "description": "Whether you are looking for a special piece for a memorable occasion or have an inquiry about our products; we are here to craft your next story together.",
+    "form": {
+      "title": "Send Us a Message",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Enter your name",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "example@domain.com",
+      "phoneLabel": "Phone / WhatsApp",
+      "phonePlaceholder": "+970XXXXXXXXX",
+      "subjectLabel": "Request Type",
+      "subjectOptions": {
+        "custom": "Custom Order / Personalized Piece",
+        "inquiry": "Order Inquiry",
+        "general": "General Inquiry"
+      },
+      "messageLabel": "Your Message / Idea Details",
+      "messagePlaceholder": "Write the details of the piece, preferred colors, or occasion...",
+      "submitButton": "Send Message",
+      "submitting": "Sending...",
+      "successMessage": "Your message has been sent successfully! We will get back to you soon."
+    },
+    "info": {
+      "whatsappTitle": "Quick WhatsApp Contact",
+      "whatsappSub": "Available to answer your direct inquiries",
+      "instagramTitle": "Follow Us on Instagram",
+      "instagramSub": "See behind the scenes and new details",
+      "emailTitle": "Email Address",
+      "emailSub": "For inquiries and collaboration"
+    }
   }
 }

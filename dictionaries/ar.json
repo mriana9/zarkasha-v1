@@ -246,5 +246,40 @@
     "closingText": "اختاري قطعة تحمل معنى، أو شاركينا فكرتكِ لنصنع معًا تفصيلة لا تشبه سواكِ.",
     "exploreButton": "اكتشفي المتجر",
     "customLink": "ابدئي طلبًا خاصًا"
+  },
+  "ContactPage": {
+    "breadcrumb": { "home": "الرئيسية", "current": "تواصل معنا" },
+    "kicker": "نحب أن نسمع منكِ",
+    "titlePart1": "هل لديكِ فكرة",
+    "titlePart2": "تنتظر أن تُطرّز؟",
+    "description": "سواء كنتِ تبحثين عن قطعة خاصة لمناسبة مميزة، أو لديكِ استفسار عن منتجاتنا؛ نحن هنا لنحكي معاً حكاية قطعتكِ القادمة.",
+    "form": {
+      "title": "أرسلي لنا رسالة",
+      "nameLabel": "الاسم الكامل",
+      "namePlaceholder": "أدخلي اسمكِ الكريم",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "example@domain.com",
+      "phoneLabel": "رقم الهاتف / الواتساب",
+      "phonePlaceholder": "059XXXXXXXX",
+      "subjectLabel": "نوع الطلب",
+      "subjectOptions": {
+        "custom": "طلب قطعة خاصة / مطرزة باسم",
+        "inquiry": "استفسار عن طلب قائم",
+        "general": "استفسار عام"
+      },
+      "messageLabel": "رسالتكِ / تفاصيل الفكرة",
+      "messagePlaceholder": "اكتبي تفاصيل القطعة، الألوان المفضلّة، أو المناسبة...",
+      "submitButton": "إرسال الرسالة",
+      "submitting": "جاري الإرسال...",
+      "successMessage": "تم إرسال رسالتكِ بنجاح! سنتواصل معكِ في أقرب وقت."
+    },
+    "info": {
+      "whatsappTitle": "تواصل سريع عبر واتساب",
+      "whatsappSub": "متواجدون للرد على استفساراتكِ المباشرة",
+      "instagramTitle": "تابعي يومياتنا على إنستغرام",
+      "instagramSub": "شاهد كواليس العمل والتفاصيل الجديدة",
+      "emailTitle": "البريد الإلكتروني",
+      "emailSub": "للاستفسارات والتعاون"
+    }
   }
 }
