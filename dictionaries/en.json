@@ -74,5 +74,27 @@
     "titlePart2": "Except Its Owner",
     "description": "A name, color, occasion, or small detail that carries great meaning. Share your idea with us to begin the story of a custom-designed piece just for you.",
     "buttonText": "Design Your Custom Piece"
+  },
+  "Values": {
+    "kicker": "What We Believe In",
+    "title": "In Every Stitch... Value",
+    "items": [
+      {
+        "title": "Living Heritage",
+        "text": "We draw inspiration from the beauty of Palestinian embroidery and its rich visual identity."
+      },
+      {
+        "title": "Thoughtful Details",
+        "text": "Every small detail is part of the story, from the color to the final touch."
+      },
+      {
+        "title": "Meaningful Gift",
+        "text": "Personal pieces chosen to stay, and gifted in moments closest to the heart."
+      },
+      {
+        "title": "Made with Love",
+        "text": "A celebration of handcraft and the time that gives each piece its own soul."
+      }
+    ]
   }
 }

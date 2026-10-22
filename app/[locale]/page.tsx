@@ -8,6 +8,7 @@ import { CategorySection } from "@/components/home/categories/CategorySection";
 import { CatalogSection } from "@/components/home/catalog/CatalogSection";
 import { StorySection } from "@/components/home/story/StorySection";
 import { CustomSection } from "@/components/home/custom/CustomSection";
+import { ValuesSection } from "@/components/home/values/ValuesSection";
 
 interface PageProps {
   params: Promise<{ locale: "ar" | "en" }>;
@@ -32,6 +33,7 @@ async function HomeContent({ params }: PageProps) {
       <CatalogSection dict={dict.Catalog} locale={locale} />
       <StorySection dict={dict.Story} locale={locale} />
       <CustomSection dict={dict.Custom} locale={locale} />
+      <ValuesSection dict={dict.Values} />
     </>
   );
 }
