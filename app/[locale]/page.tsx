@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { HeroSection } from "@/components/home/hero/HeroSection";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { MarqueeSection } from "@/components/home/hero/MarqueeSection";
+import { CategorySection } from "@/components/home/categories/CategorySection";
 
 interface PageProps {
   params: Promise<{ locale: "ar" | "en" }>;
@@ -24,6 +25,7 @@ async function HomeContent({ params }: PageProps) {
       />
       <HeroSection dict={dict.Hero} />
       <MarqueeSection items={dict.Marquee} />
+      <CategorySection dict={dict.Categories} locale={locale} />
     </>
   );
 }

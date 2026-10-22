@@ -38,5 +38,18 @@
     "Made with Love",
     "Details That Speak",
     "Meaningful Gifts"
-  ]
+  ],
+  "Categories": {
+    "eyebrow": "Choose What Reflects You",
+    "title": "Shop by Category",
+    "viewAll": "All Products",
+    "items": {
+      "hairAccessories": "Hair Accessories",
+      "embroideredThobes": "Embroidered Thobes",
+      "bookmarks": "Bookmarks & Covers",
+      "keychains": "Keychains",
+      "gifts": "Favors & Gifts",
+      "customOrders": "Custom Orders"
+    }
+  }
 }
