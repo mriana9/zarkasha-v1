@@ -103,5 +103,13 @@
     "titlePart2": "Many Stories",
     "description": "Glimpses of Zarkasha products and embroidery details that give each piece its own unique character.",
     "handle": "Official account upon linking"
+  },
+  "Contact": {
+    "kicker": "We'd Love to Hear From You",
+    "titlePart1": "Do You Have an Idea",
+    "titlePart2": "Waiting to Be Embroidered?",
+    "emailLabel": "Your Email",
+    "placeholder": "name@example.com",
+    "notice": "The form is ready to be linked to a messaging service once server settings are provided."
   }
 }
