@@ -154,5 +154,37 @@
     },
     "rights": "All rights reserved.",
     "tagline": "Made to Tell a Story"
+  },
+  "Shop": {
+    "breadcrumb": { "home": "Home", "current": "Shop" },
+    "promoLabel": "Coming Soon",
+    "titlePart1": "New Threads,",
+    "titlePart2": "Stories Await You",
+    "description": "Zarkasha's new collection is on its way to you; embroidered Palestinian pieces designed to accompany your closest moments.",
+    "exploreButton": "Explore Selections",
+    "customLink": "Request a Custom Piece",
+    "noteTitle": "New Collection",
+    "noteText": "Palestinian details with a contemporary spirit",
+    "catalogTitle": "Selections",
+    "catalogSubtitle": "Explore Zarkasha collection",
+    "categories": {
+      "all": "All",
+      "thobes": "Embroidered Thobes",
+      "hair": "Hair Accessories",
+      "books": "Book Covers & Bookmarks",
+      "keychains": "Keychains"
+    },
+    "searchPlaceholder": "Search for a piece...",
+    "sortDefault": "Default Sorting",
+    "emptyTitle": "Collection Under Preparation",
+    "emptyDesc": "We are arranging every detail with care. Follow Zarkasha for the launch date.",
+    "serviceStrip": {
+      "item1Title": "Handmade Embroidery",
+      "item1Desc": "Crafted with precision and care in every stitch",
+      "item2Title": "Authentic Heritage",
+      "item2Desc": "Inspired by Palestinian identity",
+      "item3Title": "Custom Pieces",
+      "item3Desc": "Designs that reflect your own story"
+    }
   }
 }
