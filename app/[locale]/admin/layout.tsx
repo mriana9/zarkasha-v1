@@ -1,6 +1,8 @@
 import { use } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 
+export const instant = false;
+
 interface AdminRootLayoutProps {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
