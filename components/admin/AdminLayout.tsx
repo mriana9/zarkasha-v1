@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,6 +10,8 @@ import {
   MessageSquare,
   Settings,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -32,6 +35,7 @@ interface AdminLayoutProps {
 export function AdminLayout({ children, locale, dict }: AdminLayoutProps) {
   const pathname = usePathname();
   const isRtl = locale === "ar";
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
     {
@@ -59,14 +63,41 @@ export function AdminLayout({ children, locale, dict }: AdminLayoutProps) {
 
   return (
     <div
-      className="min-h-screen bg-[#f7f5f2] flex font-tajawal text-brown"
+      className="min-h-screen bg-[#f7f5f2] flex flex-col lg:flex-row font-tajawal text-brown"
       dir={isRtl ? "rtl" : "ltr"}
     >
+      {/* Mobile Top Bar */}
+      <div className="lg:hidden flex items-center justify-between bg-burgundy text-ivory p-4 shadow-md">
+        <div>
+          <h1 className="font-amiri text-xl font-normal text-ivory">
+            {dict.brandName}
+          </h1>
+          <p className="text-[9px] text-blush/80">{dict.brandSubtitle}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 text-ivory hover:bg-white/10 rounded-[3px]"
+          aria-label="Toggle Menu"
+        >
+          {isMobileMenuOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
+        </button>
+      </div>
+
+      {/* Sidebar for Desktop & Mobile Drawer */}
       <aside
-        className={`w-64 bg-burgundy text-ivory flex flex-col justify-between shrink-0 shadow-lg ${isRtl ? "border-l" : "border-r"} border-ivory/10`}
+        className={`fixed inset-y-0 z-50 w-64 bg-burgundy text-ivory flex flex-col justify-between shrink-0 shadow-lg transition-transform duration-300 lg:static lg:translate-x-0 ${
+          isRtl
+            ? `${isMobileMenuOpen ? "right-0" : "-right-64"} border-l`
+            : `${isMobileMenuOpen ? "left-0" : "-left-64"} border-r`
+        } border-ivory/10`}
       >
         <div>
-          <div className="p-6 text-center border-b border-ivory/10">
+          <div className="p-6 text-center border-b border-ivory/10 hidden lg:block">
             <h1 className="font-amiri text-3xl font-normal text-ivory tracking-wide">
               {dict.brandName}
             </h1>
@@ -83,6 +114,7 @@ export function AdminLayout({ children, locale, dict }: AdminLayoutProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-[3px] text-xs font-medium transition-colors ${
                     isActive
                       ? "bg-white/15 text-ivory font-semibold shadow-xs border-r-2 border-ivory"
@@ -120,7 +152,16 @@ export function AdminLayout({ children, locale, dict }: AdminLayoutProps) {
         </div>
       </aside>
 
-      <main className="flex-1 p-8 overflow-y-auto bg-[#fbf9f6]">
+      {/* Backdrop for mobile */}
+      {isMobileMenuOpen && (
+        <div
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+        />
+      )}
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 lg:p-8 overflow-y-auto bg-[#fbf9f6]">
         {children}
       </main>
     </div>

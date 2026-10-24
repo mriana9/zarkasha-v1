@@ -131,11 +131,9 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
   );
   const [replyText, setReplyText] = useState("");
 
-  // Counts for Badges
   const unreadCount = messages.filter((m) => !m.isRead).length;
   const notRepliedCount = messages.filter((m) => !m.isReplied).length;
 
-  // Filter logic
   const filteredMessages = messages.filter((m) => {
     const matchesSearch =
       m.senderName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -234,7 +232,8 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
                   className="w-full p-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy resize-none"
                 />
 
-                <div className="flex flex-wrap items-center justify-end gap-3">
+                {/* Buttons wrapper: w-full on mobile, flex-row on desktop */}
+                <div className="flex flex-col sm:flex-row items-center justify-end gap-3">
                   <a
                     href={`https://wa.me/${selectedMessage.senderPhone}?text=${encodeURIComponent(replyText)}`}
                     target="_blank"
@@ -253,7 +252,7 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
                         isRead: true,
                       }));
                     }}
-                    className="px-5 py-2.5 bg-[#25D366] text-white rounded-[3px] text-xs font-medium hover:bg-[#20ba5a] transition-colors shadow-xs flex items-center gap-2"
+                    className="w-full sm:w-auto px-5 py-2.5 bg-[#25D366] text-white rounded-[3px] text-xs font-medium hover:bg-[#20ba5a] transition-colors shadow-xs flex items-center justify-center gap-2"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span>{t.whatsappBtn}</span>
@@ -262,7 +261,7 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
                   <button
                     type="button"
                     onClick={handleSendReply}
-                    className="px-6 py-2.5 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-colors shadow-xs flex items-center gap-2 cursor-pointer"
+                    className="w-full sm:w-auto px-6 py-2.5 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{t.sendEmailBtn}</span>
