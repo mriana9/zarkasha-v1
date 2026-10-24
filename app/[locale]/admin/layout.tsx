@@ -3,7 +3,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 
 interface AdminRootLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ locale: "ar" | "en" }>;
+  params: Promise<{ locale: string }>;
 }
 
 export default function AdminRootLayout({
@@ -11,7 +11,7 @@ export default function AdminRootLayout({
   params,
 }: AdminRootLayoutProps) {
   const resolvedParams = use(params);
-  const locale = resolvedParams.locale;
+  const locale = (resolvedParams.locale === "en" ? "en" : "ar") as "ar" | "en";
   const isRtl = locale === "ar";
 
   const dict = {
