@@ -1,32 +1,38 @@
-import { getDictionary } from "@/lib/dictionary";
+import { use } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 
-export const instant = false;
-
-interface LayoutProps {
+interface AdminRootLayoutProps {
   children: React.ReactNode;
   params: Promise<{ locale: "ar" | "en" }>;
 }
 
-export default async function Layout({ children, params }: LayoutProps) {
-  const { locale } = await params;
-  const dict = await getDictionary(locale);
-  const layoutDict = dict?.AdminLayout || {
-    brandName: "Zarkasha",
-    brandSubtitle: "Dashboard - By Mariana",
-    adminName: "Mariana",
-    adminRole: "Store Manager",
+export default function AdminRootLayout({
+  children,
+  params,
+}: AdminRootLayoutProps) {
+  const resolvedParams = use(params);
+  const locale = resolvedParams.locale;
+  const isRtl = locale === "ar";
+
+  const dict = {
+    brandName: isRtl ? "زركشة" : "Zarkasha",
+    brandSubtitle: isRtl
+      ? "لوحة التحكم - By Mariana"
+      : "Admin Dashboard - By Mariana",
+    adminName: isRtl ? "ماريانا" : "Mariana",
+    adminRole: isRtl ? "مديرة المتجر" : "Store Manager",
     nav: {
-      products: "Products",
-      categories: "Categories",
-      orders: "Orders",
-      messages: "Messages",
-      settings: "Settings",
+      products: isRtl ? "المنتجات" : "Products",
+      categories: isRtl ? "التصنيفات" : "Categories",
+      orders: isRtl ? "الطلبات" : "Orders",
+      messages: isRtl ? "الرسائل" : "Messages",
+      customers: isRtl ? "العملاء" : "Customers",
+      settings: isRtl ? "الإعدادات" : "Settings",
     },
   };
 
   return (
-    <AdminLayout locale={locale} dict={layoutDict}>
+    <AdminLayout locale={locale} dict={dict}>
       {children}
     </AdminLayout>
   );
