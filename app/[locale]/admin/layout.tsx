@@ -1,6 +1,8 @@
 import { getDictionary } from "@/lib/dictionary";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 
+export const instant = false;
+
 interface LayoutProps {
   children: React.ReactNode;
   params: Promise<{ locale: "ar" | "en" }>;

@@ -321,5 +321,25 @@
       "draft": "Draft"
     },
     "currency": "JOD"
+  },
+  "AddProduct": {
+    "title": "Add New Product",
+    "subtitle": "Enter the embroidered product details in Arabic & English with images and pricing",
+    "backToProducts": "Back to Products",
+    "basicInfo": "Basic Information",
+    "titleAr": "Product Title (Arabic)",
+    "titleEn": "Product Title (English)",
+    "descriptionAr": "Description (Arabic)",
+    "descriptionEn": "Description (English)",
+    "pricingAndStock": "Pricing, Stock & Category",
+    "category": "Category",
+    "selectCategory": "Select Category...",
+    "price": "Price (JOD)",
+    "stock": "Available Stock",
+    "isFeatured": "Set as Featured Product (Shown on Home Page)",
+    "images": "Product Images",
+    "uploadHint": "Drag & drop images here or click to upload",
+    "submit": "Save Product",
+    "saving": "Saving..."
   }
 }
