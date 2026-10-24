@@ -85,7 +85,7 @@ export function AdminLayout({ children, locale, dict }: AdminLayoutProps) {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-[3px] text-xs font-medium transition-colors ${
                     isActive
-                      ? "bg-ivory text-burgundy font-semibold shadow-xs"
+                      ? "bg-white/15 text-ivory font-semibold shadow-xs border-r-2 border-ivory"
                       : "text-ivory/80 hover:bg-white/10 hover:text-ivory"
                   }`}
                 >
