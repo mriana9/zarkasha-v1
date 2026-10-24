@@ -2,7 +2,13 @@
 
 import { useState, use } from "react";
 import Image from "next/image";
-import { Eye, MessageCircle, CheckCircle2 } from "lucide-react";
+import {
+  Eye,
+  MessageCircle,
+  CheckCircle2,
+  FileSpreadsheet,
+  FileText,
+} from "lucide-react";
 
 interface OrderItem {
   id: string;
@@ -32,6 +38,8 @@ export default function AdminOrdersPage({ params }: OrdersPageProps) {
     subtitle: isRtl
       ? "متابعة الطلبات وتحديث حالتها"
       : "Track and update order statuses",
+    exportExcel: isRtl ? "تصدير Excel / Sheets" : "Export Excel / Sheets",
+    exportPdf: isRtl ? "تصدير PDF" : "Export PDF",
     tabs: {
       all: isRtl ? "الكل" : "All",
       new: isRtl ? "جديد" : "New",
@@ -151,9 +159,9 @@ export default function AdminOrdersPage({ params }: OrdersPageProps) {
     },
   ]);
 
-  const [currentStatusSelect, setCurrentStatusSelect] = useState(
-    selectedOrder.status,
-  );
+  const [currentStatusSelect, setCurrentStatusSelect] = useState<
+    OrderItem["status"]
+  >(selectedOrder.status);
 
   const getStatusBadge = (status: OrderItem["status"]) => {
     switch (status) {
@@ -187,13 +195,56 @@ export default function AdminOrdersPage({ params }: OrdersPageProps) {
     );
   };
 
+  const handleExportExcel = () => {
+    let csv =
+      "\uFEFFرقم الطلب,العميلة,المدينة,الإجمالي,طريقة الدفع,الحالة,التاريخ\n";
+    filteredOrders.forEach((o) => {
+      csv += `"${o.orderNumber}","${o.customerName}","${o.city}","${o.total}","${o.paymentMethod}","${t.statusNames[o.status]}","${o.date}"\n`;
+    });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `zarkasha_orders_${activeTab}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportPdf = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-6 font-tajawal max-w-7xl mx-auto">
-      <div>
-        <h1 className="font-amiri text-3xl font-normal text-burgundy">
-          {t.title}
-        </h1>
-        <p className="text-xs text-[#887a75] mt-1">{t.subtitle}</p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-amiri text-3xl font-normal text-burgundy">
+            {t.title}
+          </h1>
+          <p className="text-xs text-[#887a75] mt-1">{t.subtitle}</p>
+        </div>
+
+        {/* Export Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 bg-olive text-ivory rounded-[3px] text-xs font-medium hover:bg-olive/90 transition-colors shadow-xs cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>{t.exportExcel}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-colors shadow-xs cursor-pointer"
+          >
+            <FileText className="w-4 h-4" />
+            <span>{t.exportPdf}</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

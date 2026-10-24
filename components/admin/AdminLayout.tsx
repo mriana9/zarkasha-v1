@@ -8,6 +8,7 @@ import {
   Grid,
   Package,
   MessageSquare,
+  Users,
   Settings,
   LogOut,
   Menu,
@@ -27,6 +28,7 @@ interface AdminLayoutProps {
       categories: string;
       orders: string;
       messages: string;
+      customers?: string;
       settings: string;
     };
   };
@@ -48,11 +50,20 @@ export function AdminLayout({ children, locale, dict }: AdminLayoutProps) {
       href: `/${locale}/admin/categories`,
       icon: Grid,
     },
-    { label: dict.nav.orders, href: `/${locale}/admin/orders`, icon: Package },
+    {
+      label: dict.nav.orders,
+      href: `/${locale}/admin/orders`,
+      icon: Package,
+    },
     {
       label: dict.nav.messages,
       href: `/${locale}/admin/messages`,
       icon: MessageSquare,
+    },
+    {
+      label: dict.nav.customers || (isRtl ? "العملاء" : "Customers"),
+      href: `/${locale}/admin/customers`,
+      icon: Users,
     },
     {
       label: dict.nav.settings,
