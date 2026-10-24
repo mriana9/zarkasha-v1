@@ -281,5 +281,40 @@
       "emailTitle": "البريد الإلكتروني",
       "emailSub": "للاستفسارات والتعاون"
     }
+  },
+  "AdminLayout": {
+    "brandName": "زركشة",
+    "brandSubtitle": "لوحة التحكم - By Mariana",
+    "adminName": "ماريانا",
+    "adminRole": "مديرة المتجر",
+    "nav": {
+      "products": "المنتجات",
+      "categories": "التصنيفات",
+      "orders": "الطلبات",
+      "messages": "الرسائل",
+      "settings": "الإعدادات"
+    }
+  },
+  "AdminProducts": {
+    "title": "المنتجات",
+    "subtitle": "إدارة منتجات المتجر وأسعارها ومخزونها",
+    "addProduct": "إضافة منتج",
+    "searchPlaceholder": "ابحث عن منتج...",
+    "allCategories": "كل التصنيفات",
+    "allStatuses": "كل الحالات",
+    "table": {
+      "product": "المنتج",
+      "category": "التصنيف",
+      "price": "السعر",
+      "stock": "المخزون",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "status": {
+      "published": "منشور",
+      "outOfStock": "نفدت الكمية",
+      "draft": "مسودة"
+    },
+    "currency": "د.أ"
   }
 }

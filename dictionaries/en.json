@@ -286,5 +286,40 @@
       "emailTitle": "Email Address",
       "emailSub": "For inquiries and collaboration"
     }
+  },
+  "AdminLayout": {
+    "brandName": "Zarkasha",
+    "brandSubtitle": "Dashboard - By Mariana",
+    "adminName": "Mariana",
+    "adminRole": "Store Manager",
+    "nav": {
+      "products": "Products",
+      "categories": "Categories",
+      "orders": "Orders",
+      "messages": "Messages",
+      "settings": "Settings"
+    }
+  },
+  "AdminProducts": {
+    "title": "Products",
+    "subtitle": "Manage store products, prices, and stock",
+    "addProduct": "Add Product",
+    "searchPlaceholder": "Search product...",
+    "allCategories": "All Categories",
+    "allStatuses": "All Statuses",
+    "table": {
+      "product": "Product",
+      "category": "Category",
+      "price": "Price",
+      "stock": "Stock",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "published": "Published",
+      "outOfStock": "Out of Stock",
+      "draft": "Draft"
+    },
+    "currency": "JOD"
   }
 }
