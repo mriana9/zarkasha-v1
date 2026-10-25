@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
 import Image from "next/image";
-import { Edit3, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Edit3, Trash2, Loader2 } from "lucide-react";
 import { AdminDataTable } from "@/components/admin/AdminDataTable";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface ProductItem {
   id: string;
   name: { ar: string; en: string };
-  category: { ar: string; en: string };
+  categoryName: { ar: string; en: string };
   price: number;
-  stock: string | number;
+  stock: number;
   isVisible: boolean;
   image: string;
 }
@@ -23,70 +27,106 @@ export default function AdminProductsPage({ params }: ProductsPageProps) {
   const resolvedParams = use(params);
   const locale = resolvedParams.locale;
   const isRtl = locale === "ar";
+  const router = useRouter();
+  const supabase = createClient();
 
-  const [products, setProducts] = useState<ProductItem[]>([
-    {
-      id: "1",
-      name: { ar: "فستان مطرز", en: "Embroidered Dress" },
-      category: { ar: "فساتين مطرزة", en: "Embroidered Dresses" },
-      price: 40,
-      stock: "4",
-      isVisible: true,
-      image: "/categories/hair-accessories1.jpg",
-    },
-    {
-      id: "2",
-      name: { ar: "ربطة شعر مطرزة", en: "Embroidered Bow" },
-      category: { ar: "أكسسوارات الشعر", en: "Hair Accessories" },
-      price: 12,
-      stock: "12",
-      isVisible: true,
-      image: "/categories/hair-accessories.jpg",
-    },
-    {
-      id: "3",
-      name: { ar: "طوق شعر مطرز", en: "Embroidered Headband" },
-      category: { ar: "أكسسوارات الشعر", en: "Hair Accessories" },
-      price: 15,
-      stock: "0",
-      isVisible: false,
-      image: "/categories/hair-accessories1.jpg",
-    },
-    {
-      id: "4",
-      name: { ar: "ميدالية مطرزة", en: "Embroidered Keychain" },
-      category: { ar: "ميداليات", en: "Keychains" },
-      price: 25,
-      stock: "25",
-      isVisible: true,
-      image: "/categories/book.png",
-    },
-    {
-      id: "5",
-      name: { ar: "دفتر بغلاف مطرز", en: "Embroidered Notebook" },
-      category: { ar: "دفاتر ومفكرات", en: "Notebooks" },
-      price: 8,
-      stock: "8",
-      isVisible: true,
-      image: "/categories/book.png",
-    },
-    {
-      id: "6",
-      name: { ar: "هدية مخصصة", en: "Custom Gift" },
-      category: { ar: "هدايا مخصصة", en: "Custom Gifts" },
-      price: 0,
-      stock: "-",
-      isVisible: false,
-      image: "/categories/hair-accessories.jpg",
-    },
-  ]);
+  const [products, setProducts] = useState<ProductItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const toggleVisibility = (id: string) => {
+  const fetchProducts = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*, categories(name_ar, name_en)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast.error(isRtl ? "فشل تحميل المنتجات" : "Failed to load products");
+      return null;
+    }
+
+    return (
+      data?.map((item) => {
+        const cat = item.categories as {
+          name_ar?: string;
+          name_en?: string;
+        } | null;
+        return {
+          id: item.id,
+          name: { ar: item.title_ar, en: item.title_en },
+          categoryName: {
+            ar: cat?.name_ar || (isRtl ? "بدون تصنيف" : "Uncategorized"),
+            en: cat?.name_en || "Uncategorized",
+          },
+          price: Number(item.price),
+          stock: item.stock,
+          isVisible: item.is_visible ?? true,
+          image: item.images?.[0] || "/categories/book.png",
+        };
+      }) ?? []
+    );
+  }, [supabase, isRtl]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadProducts = async () => {
+      const formatted = await fetchProducts();
+      if (!isActive) return;
+
+      if (formatted) setProducts(formatted);
+      setLoading(false);
+    };
+
+    void loadProducts();
+    return () => {
+      isActive = false;
+    };
+  }, [fetchProducts]);
+
+  const toggleVisibility = async (id: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
     setProducts((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, isVisible: !item.isVisible } : item,
+        item.id === id ? { ...item, isVisible: newStatus } : item,
       ),
     );
+
+    const { error } = await supabase
+      .from("products")
+      .update({ is_visible: newStatus })
+      .eq("id", id);
+
+    if (error) {
+      toast.error(
+        isRtl ? "فشل تحديث حالة الظهور" : "Failed to update visibility",
+      );
+      const formatted = await fetchProducts();
+      if (formatted) setProducts(formatted);
+    } else {
+      toast.success(
+        isRtl
+          ? "تم تحديث حالة الظهور بنجاح"
+          : "Visibility updated successfully",
+      );
+      router.refresh();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setProducts((prev) => prev.filter((item) => item.id !== id));
+
+    const { error } = await supabase.from("products").delete().eq("id", id);
+
+    if (error) {
+      toast.error(isRtl ? "فشل حذف المنتج" : "Failed to delete product");
+      const formatted = await fetchProducts();
+      if (formatted) setProducts(formatted);
+    } else {
+      toast.success(
+        isRtl ? "تم حذف المنتج بنجاح" : "Product deleted successfully",
+      );
+      router.refresh();
+    }
   };
 
   const columns = [
@@ -108,7 +148,7 @@ export default function AdminProductsPage({ params }: ProductsPageProps) {
     },
     {
       header: isRtl ? "التصنيف" : "Category",
-      accessor: (item: ProductItem) => item.category[locale],
+      accessor: (item: ProductItem) => item.categoryName[locale],
       className: "text-[#74655f]",
     },
     {
@@ -116,14 +156,14 @@ export default function AdminProductsPage({ params }: ProductsPageProps) {
       className: "text-center",
       accessor: (item: ProductItem) => (
         <span className="font-medium text-brown">
-          {item.price > 0 ? `${item.price} ${isRtl ? "د.أ" : "JOD"}` : "--"}
+          {item.price > 0 ? `${item.price} ${isRtl ? "شيكل" : "ILS"}` : "--"}
         </span>
       ),
     },
     {
       header: isRtl ? "المخزون" : "Stock",
       className: "text-center",
-      accessor: "stock" as keyof ProductItem,
+      accessor: (item: ProductItem) => item.stock,
     },
     {
       header: isRtl ? "الظهور" : "Visibility",
@@ -132,7 +172,7 @@ export default function AdminProductsPage({ params }: ProductsPageProps) {
         <div className="flex items-center justify-center gap-2">
           <button
             type="button"
-            onClick={() => toggleVisibility(item.id)}
+            onClick={() => toggleVisibility(item.id, item.isVisible)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
               item.isVisible ? "bg-olive" : "bg-[#c8beba]"
             }`}
@@ -163,19 +203,20 @@ export default function AdminProductsPage({ params }: ProductsPageProps) {
     },
     {
       header: isRtl ? "الإجراءات" : "Actions",
-      accessor: () => (
+      accessor: (item: ProductItem) => (
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Link
+            href={`/${locale}/admin/products/${item.id}/edit`}
             aria-label="Edit"
             className="p-1 text-[#887a75] hover:text-burgundy transition-colors cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
-          </button>
+          </Link>
           <button
             type="button"
+            onClick={() => handleDelete(item.id)}
             aria-label="Delete"
-            className="p-1 text-[#887a75] hover:text-burgundy transition-colors cursor-pointer"
+            className="p-1 text-[#887a75] hover:text-red-600 transition-colors cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -183,6 +224,14 @@ export default function AdminProductsPage({ params }: ProductsPageProps) {
       ),
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-burgundy" />
+      </div>
+    );
+  }
 
   return (
     <AdminDataTable
