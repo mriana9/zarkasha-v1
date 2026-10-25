@@ -1,25 +1,29 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { CategoryCard } from "./CategoryCard";
+import { createClient } from "@/lib/supabase/client";
 
 interface CategorySectionProps {
   dict: {
     eyebrow: string;
     title: string;
     viewAll: string;
-    items: {
-      hairAccessories: string;
-      embroideredThobes: string;
-      bookmarks: string;
-      keychains: string;
-      gifts: string;
-      customOrders: string;
-    };
   };
   locale: string;
 }
 
-export function CategorySection({ dict, locale }: CategorySectionProps) {
+export async function CategorySection({ dict, locale }: CategorySectionProps) {
+  const supabase = await createClient();
+  const { data: categories, error } = await supabase
+    .from("categories")
+    .select("*")
+    .eq("is_visible", true)
+    .order("created_at", { ascending: true }); 
+
+  if (error || !categories) {
+    return null;
+  }
+
   return (
     <section className="py-20 px-[4vw] bg-ivory" id="categories">
       <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-12">
@@ -42,35 +46,30 @@ export function CategorySection({ dict, locale }: CategorySectionProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-[240px]">
-        <CategoryCard
-          number="01"
-          title={dict.items.embroideredThobes}
-          imageSrc="/categories/dresses.jpg"
-          href={`/${locale}/shop?category=thobes`}
-          className="lg:row-span-2 lg:col-start-1 lg:row-start-1"
-        />
+        {categories.map((category, index) => {
+          const number = String(index + 1).padStart(2, "0");
+          const title = locale === "ar" ? category.name_ar : category.name_en;
+          const imageSrc = category.image_url || "/categories/book.png";
+          const href = `/${locale}/shop?category=${category.slug}`;
 
-        <CategoryCard
-          number="02"
-          title={dict.items.hairAccessories}
-          imageSrc="/categories/hair-accessories.jpg"
-          href={`/${locale}/shop?category=hair-accessories`}
-        />
+          let className = "";
+          if (index === 0) {
+            className = "lg:row-span-2 lg:col-start-1 lg:row-start-1";
+          } else if (index === 3) {
+            className = "md:col-span-2 lg:col-span-2 lg:col-start-2";
+          }
 
-        <CategoryCard
-          number="03"
-          title={dict.items.bookmarks}
-          imageSrc="/categories/book.png"
-          href={`/${locale}/shop?category=bookmarks`}
-        />
-
-        <CategoryCard
-          number="04"
-          title={dict.items.keychains}
-          imageSrc="/categories/keychains1.png"
-          href={`/${locale}/shop?category=keychains`}
-          className="md:col-span-2 lg:col-span-2 lg:col-start-2"
-        />
+          return (
+            <CategoryCard
+              key={category.id}
+              number={number}
+              title={title}
+              imageSrc={imageSrc}
+              href={href}
+              className={className}
+            />
+          );
+        })}
       </div>
     </section>
   );
