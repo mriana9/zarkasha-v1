@@ -7,6 +7,14 @@ const defaultLocale = "ar";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const isAdminRoute = pathname.includes("/admin");
+
+  if (isAdminRoute) {
+    const localeMatch = pathname.match(/^\/(ar|en)(\/|$)/);
+    const locale = localeMatch ? localeMatch[1] : defaultLocale;
+    return NextResponse.redirect(new URL(`/${locale}`, request.url));
+  }
+
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   );
