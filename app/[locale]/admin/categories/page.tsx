@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Edit3, Trash2, Loader2 } from "lucide-react";
 import { AdminDataTable } from "@/components/admin/AdminDataTable";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +25,7 @@ export default function AdminCategoriesPage({ params }: CategoriesPageProps) {
   const resolvedParams = use(params);
   const locale = resolvedParams.locale;
   const isRtl = locale === "ar";
+  const router = useRouter();
   const supabase = createClient();
 
   const [categories, setCategories] = useState<CategoryItem[]>([]);
@@ -93,6 +95,7 @@ export default function AdminCategoriesPage({ params }: CategoriesPageProps) {
           ? "تم تحديث حالة الظهور بنجاح"
           : "Visibility updated successfully",
       );
+      router.refresh();
     }
   };
 
@@ -109,6 +112,7 @@ export default function AdminCategoriesPage({ params }: CategoriesPageProps) {
       toast.success(
         isRtl ? "تم حذف التصنيف بنجاح" : "Category deleted successfully",
       );
+      router.refresh();
     }
   };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Plus, Search, Edit3, Trash2 } from "lucide-react";
@@ -31,8 +32,28 @@ export function AdminDataTable<T extends { id: string }>({
   searchPlaceholder,
   data,
   columns,
+  onSearchChange,
 }: AdminDataTableProps<T>) {
   const isRtl = locale === "ar";
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredData = data.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return Object.values(item).some((val) => {
+      if (typeof val === "string" || typeof val === "number") {
+        return String(val).toLowerCase().includes(query);
+      }
+      if (val && typeof val === "object") {
+        return Object.values(val).some(
+          (subVal) =>
+            (typeof subVal === "string" || typeof subVal === "number") &&
+            String(subVal).toLowerCase().includes(query),
+        );
+      }
+      return false;
+    });
+  });
 
   return (
     <div className="space-y-6 font-tajawal max-w-6xl mx-auto">
@@ -59,6 +80,11 @@ export function AdminDataTable<T extends { id: string }>({
             <div className="flex-1 relative">
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  onSearchChange?.(e.target.value);
+                }}
                 placeholder={searchPlaceholder}
                 className={`w-full h-10 px-3 ${isRtl ? "pr-8" : "pl-8"} bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy placeholder:text-[#a0928d]`}
               />
@@ -84,27 +110,40 @@ export function AdminDataTable<T extends { id: string }>({
               </tr>
             </thead>
             <tbody className="divide-y divide-burgundy/5">
-              {data.map((item) => (
-                <tr
-                  key={item.id}
-                  className="hover:bg-burgundy/2 transition-colors"
-                >
-                  {columns.map((col, idx) => {
-                    const value =
-                      typeof col.accessor === "function"
-                        ? col.accessor(item)
-                        : (item[col.accessor] as React.ReactNode);
-                    return (
-                      <td
-                        key={idx}
-                        className={`py-3.5 px-4 ${col.className || "text-start"}`}
-                      >
-                        {value}
-                      </td>
-                    );
-                  })}
+              {filteredData.length > 0 ? (
+                filteredData.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="hover:bg-burgundy/2 transition-colors"
+                  >
+                    {columns.map((col, idx) => {
+                      const value =
+                        typeof col.accessor === "function"
+                          ? col.accessor(item)
+                          : (item[col.accessor] as React.ReactNode);
+                      return (
+                        <td
+                          key={idx}
+                          className={`py-3.5 px-4 ${col.className || "text-start"}`}
+                        >
+                          {value}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="py-8 text-center text-[#887a75]"
+                  >
+                    {isRtl
+                      ? "لا توجد نتائج مطابقة للبحث"
+                      : "No matching results found"}
+                  </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

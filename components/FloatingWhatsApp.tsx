@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface FloatingWhatsAppProps {
   locale: "ar" | "en";
@@ -32,11 +33,37 @@ const quickQuestions: QuickQuestion[] = [
 ];
 
 export function FloatingWhatsApp({ locale }: FloatingWhatsAppProps) {
+  const supabase = createClient();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [customMessage, setCustomMessage] = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState<string>("970592749393");
 
   const isRtl: boolean = locale === "ar";
-  const phoneNumber: string = "970592749303";
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchWhatsAppSetting() {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "whatsapp")
+        .single();
+
+      if (!error && data && data.value && isActive) {
+        const cleanedNumber = data.value.replace(/\D/g, "");
+        if (cleanedNumber) {
+          setPhoneNumber(cleanedNumber);
+        }
+      }
+    }
+
+    void fetchWhatsAppSetting();
+
+    return () => {
+      isActive = false;
+    };
+  }, [supabase]);
 
   const content = {
     title: isRtl ? "خدمة العملاء - زركشة" : "Zarkasha Customer Care",
@@ -50,7 +77,14 @@ export function FloatingWhatsApp({ locale }: FloatingWhatsAppProps) {
 
   const handleSendMessage = (text: string) => {
     const encodedMessage = encodeURIComponent(text);
-    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, "_blank");
+    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -61,7 +95,10 @@ export function FloatingWhatsApp({ locale }: FloatingWhatsAppProps) {
   };
 
   return (
-    <div className={`fixed bottom-6 ${isRtl ? "right-6" : "left-6"} z-50 font-tajawal`} dir={isRtl ? "rtl" : "ltr"}>
+    <div
+      className={`fixed bottom-6 ${isRtl ? "right-6" : "left-6"} z-50 font-tajawal`}
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       {isOpen && (
         <div className="absolute bottom-16 w-80 sm:w-96 bg-[#fbf9f6] border border-burgundy/20 rounded-lg shadow-xl overflow-hidden flex flex-col mb-2">
           <div className="bg-burgundy text-ivory p-4 flex items-center justify-between">
@@ -108,7 +145,10 @@ export function FloatingWhatsApp({ locale }: FloatingWhatsAppProps) {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-3 bg-ivory border-t border-burgundy/10 flex gap-2">
+          <form
+            onSubmit={handleSubmit}
+            className="p-3 bg-ivory border-t border-burgundy/10 flex gap-2"
+          >
             <input
               type="text"
               value={customMessage}
