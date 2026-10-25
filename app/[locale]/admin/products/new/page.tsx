@@ -196,7 +196,6 @@ export default function AdminNewProductPage({
         return;
       }
 
-      // تفريغ النموذج وحقول المدخلات بالكامل بعد النجاح
       setFormData(initialFormState);
       setImageFiles([]);
       setImagePreviews([]);
