@@ -18,6 +18,16 @@ const cspHeader = `
 
 const nextConfig: NextConfig = {
   /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "tvfsqsjfolrmlkxihavo.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
   experimental: {
     agentFeedback: true,
   },

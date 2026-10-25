@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, type FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   ArrowLeft,
@@ -10,7 +11,11 @@ import {
   X,
   Sparkles,
   Link2,
+  Loader2,
 } from "lucide-react";
+import { z } from "zod";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 interface AdminNewCategoryPageProps {
   params: Promise<{ locale: "ar" | "en" }>;
@@ -22,6 +27,8 @@ export default function AdminNewCategoryPage({
   const resolvedParams = use(params);
   const locale = resolvedParams.locale;
   const isRtl = locale === "ar";
+  const router = useRouter();
+  const supabase = createClient();
 
   const [formData, setFormData] = useState({
     nameAr: "",
@@ -32,20 +39,35 @@ export default function AdminNewCategoryPage({
     imageUrl: "",
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const categorySchema = z.object({
+    nameAr: z
+      .string()
+      .min(1, isRtl ? "اسم التصنيف بالعربية مطلوب" : "Arabic name is required"),
+    nameEn: z
+      .string()
+      .min(
+        1,
+        isRtl ? "اسم التصنيف بالإنجليزية مطلوب" : "English name is required",
+      ),
+    slug: z.string().min(1, isRtl ? "الرابط (Slug) مطلوب" : "Slug is required"),
+  });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({ ...prev, imageUrl }));
+      setImageFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, imageUrl: previewUrl }));
     }
   };
 
   const handleTitleChange = (value: string, lang: "ar" | "en") => {
     setFormData((prev) => {
       const updated = { ...prev, [lang === "ar" ? "nameAr" : "nameEn"]: value };
-      // Auto-generate slug from English title if empty or matching old slug
       if (lang === "en") {
         const generatedSlug = value
           .toLowerCase()
@@ -57,15 +79,89 @@ export default function AdminNewCategoryPage({
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrors({});
+
+    const result = categorySchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        if (issue.path[0]) {
+          fieldErrors[issue.path[0] as string] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      alert(
+
+    try {
+      let uploadedImageUrl = formData.imageUrl;
+
+      if (imageFile) {
+        const fileExt = imageFile.name.split(".").pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `categories/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("zarkasha-storage")
+          .upload(filePath, imageFile);
+
+        if (uploadError) {
+          toast.error(isRtl ? "فشل رفع الصورة" : "Failed to upload image", {
+            description: uploadError.message,
+          });
+          return;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from("zarkasha-storage")
+          .getPublicUrl(filePath);
+
+        uploadedImageUrl = publicUrlData.publicUrl;
+      }
+
+      const { error } = await supabase.from("categories").insert([
+        {
+          name_ar: formData.nameAr,
+          name_en: formData.nameEn,
+          slug: formData.slug,
+          description_ar: formData.descriptionAr,
+          description_en: formData.descriptionEn,
+          image_url: uploadedImageUrl,
+          is_visible: true,
+        },
+      ]);
+
+      if (error) {
+        toast.error(isRtl ? "فشل حفظ التصنيف" : "Failed to save category", {
+          description: error.message,
+        });
+        return;
+      }
+
+      setFormData({
+        nameAr: "",
+        nameEn: "",
+        slug: "",
+        descriptionAr: "",
+        descriptionEn: "",
+        imageUrl: "",
+      });
+      setImageFile(null);
+
+      toast.success(
         isRtl ? "تمت إضافة التصنيف بنجاح!" : "Category added successfully!",
       );
-    }, 1200);
+      router.push(`/${locale}/admin/categories`);
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -112,14 +208,18 @@ export default function AdminNewCategoryPage({
               </label>
               <input
                 type="text"
-                required
                 value={formData.nameAr}
                 onChange={(e) => handleTitleChange(e.target.value, "ar")}
                 placeholder={
                   isRtl ? "مثال: فساتين مطرزة" : "e.g. Embroidered Dresses"
                 }
-                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
+                className={`w-full h-11 px-4 bg-ivory border ${
+                  errors.nameAr ? "border-red-500" : "border-burgundy/15"
+                } rounded-[3px] text-xs text-brown outline-none focus:border-burgundy`}
               />
+              {errors.nameAr && (
+                <p className="text-[11px] text-red-500">{errors.nameAr}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -131,12 +231,16 @@ export default function AdminNewCategoryPage({
               </label>
               <input
                 type="text"
-                required
                 value={formData.nameEn}
                 onChange={(e) => handleTitleChange(e.target.value, "en")}
                 placeholder="e.g. Embroidered Dresses"
-                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy ltr:text-left"
+                className={`w-full h-11 px-4 bg-ivory border ${
+                  errors.nameEn ? "border-red-500" : "border-burgundy/15"
+                } rounded-[3px] text-xs text-brown outline-none focus:border-burgundy ltr:text-left`}
               />
+              {errors.nameEn && (
+                <p className="text-[11px] text-red-500">{errors.nameEn}</p>
+              )}
             </div>
           </div>
 
@@ -147,19 +251,18 @@ export default function AdminNewCategoryPage({
             </label>
             <input
               type="text"
-              required
               value={formData.slug}
               onChange={(e) =>
                 setFormData({ ...formData, slug: e.target.value })
               }
               placeholder="e.g. embroidered-dresses"
-              className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy font-mono ltr:text-left"
+              className={`w-full h-11 px-4 bg-ivory border ${
+                errors.slug ? "border-red-500" : "border-burgundy/15"
+              } rounded-[3px] text-xs text-brown outline-none focus:border-burgundy font-mono ltr:text-left`}
             />
-            <span className="text-[10px] text-[#887a75] block">
-              {isRtl
-                ? "يستخدم في مسار الرابط الإلكتروني للمتجر (يُفضل أن يكون أحرف إنجليزية صغيرة مع شرطات)"
-                : "Used in the URL path (lowercase letters and hyphens recommended)"}
-            </span>
+            {errors.slug && (
+              <p className="text-[11px] text-red-500">{errors.slug}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
@@ -251,15 +354,18 @@ export default function AdminNewCategoryPage({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-8 py-3 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+            className="px-8 py-3 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-colors shadow-xs disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
           >
-            {isSubmitting
-              ? isRtl
-                ? "جاري الحفظ..."
-                : "Saving..."
-              : isRtl
-                ? "حفظ التصنيف"
-                : "Save Category"}
+            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <span>
+              {isSubmitting
+                ? isRtl
+                  ? "جاري الحفظ..."
+                  : "Saving..."
+                : isRtl
+                  ? "حفظ التصنيف"
+                  : "Save Category"}
+            </span>
           </button>
         </div>
       </form>

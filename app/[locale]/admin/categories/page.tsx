@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
 import Image from "next/image";
-import { Edit3, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Edit3, Trash2, Loader2 } from "lucide-react";
 import { AdminDataTable } from "@/components/admin/AdminDataTable";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface CategoryItem {
   id: string;
@@ -21,37 +24,92 @@ export default function AdminCategoriesPage({ params }: CategoriesPageProps) {
   const resolvedParams = use(params);
   const locale = resolvedParams.locale;
   const isRtl = locale === "ar";
+  const supabase = createClient();
 
-  const [categories, setCategories] = useState<CategoryItem[]>([
-    {
-      id: "1",
-      name: { ar: "فساتين مطرزة", en: "Embroidered Dresses" },
-      slug: "embroidered-dresses",
-      isVisible: true,
-      image: "/categories/hair-accessories1.jpg",
-    },
-    {
-      id: "2",
-      name: { ar: "أكسسوارات الشعر", en: "Hair Accessories" },
-      slug: "hair-accessories",
-      isVisible: true,
-      image: "/categories/hair-accessories.jpg",
-    },
-    {
-      id: "3",
-      name: { ar: "ميداليات", en: "Keychains" },
-      slug: "keychains",
-      isVisible: true,
-      image: "/categories/book.png",
-    },
-  ]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const toggleVisibility = (id: string) => {
+  const fetchCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast.error(isRtl ? "فشل تحميل التصنيفات" : "Failed to load categories");
+      return null;
+    }
+
+    return (
+      data?.map((item) => ({
+        id: item.id,
+        name: { ar: item.name_ar, en: item.name_en },
+        slug: item.slug,
+        isVisible: item.is_visible ?? true,
+        image: item.image_url || "/categories/book.png",
+      })) ?? []
+    );
+  }, [supabase, isRtl]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadCategories = async () => {
+      const formatted = await fetchCategories();
+      if (!isActive) return;
+
+      if (formatted) setCategories(formatted);
+      setLoading(false);
+    };
+
+    void loadCategories();
+    return () => {
+      isActive = false;
+    };
+  }, [fetchCategories]);
+
+  const toggleVisibility = async (id: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
     setCategories((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, isVisible: !item.isVisible } : item,
+        item.id === id ? { ...item, isVisible: newStatus } : item,
       ),
     );
+
+    const { error } = await supabase
+      .from("categories")
+      .update({ is_visible: newStatus })
+      .eq("id", id);
+
+    if (error) {
+      toast.error(
+        isRtl ? "فشل تحديث حالة الظهور" : "Failed to update visibility",
+      );
+      const formatted = await fetchCategories();
+      if (formatted) setCategories(formatted);
+    } else {
+      toast.success(
+        isRtl
+          ? "تم تحديث حالة الظهور بنجاح"
+          : "Visibility updated successfully",
+      );
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setCategories((prev) => prev.filter((item) => item.id !== id));
+
+    const { error } = await supabase.from("categories").delete().eq("id", id);
+
+    if (error) {
+      toast.error(isRtl ? "فشل حذف التصنيف" : "Failed to delete category");
+      const formatted = await fetchCategories();
+      if (formatted) setCategories(formatted);
+    } else {
+      toast.success(
+        isRtl ? "تم حذف التصنيف بنجاح" : "Category deleted successfully",
+      );
+    }
   };
 
   const columns = [
@@ -73,8 +131,8 @@ export default function AdminCategoriesPage({ params }: CategoriesPageProps) {
     },
     {
       header: isRtl ? "الرابط (Slug)" : "Slug",
-      accessor: "slug" as keyof CategoryItem,
-      className: "text-[#74655f]",
+      accessor: (item: CategoryItem) => item.slug,
+      className: "text-[#74655f] font-mono text-xs",
     },
     {
       header: isRtl ? "الظهور في الرئيسية" : "Home Visibility",
@@ -83,7 +141,7 @@ export default function AdminCategoriesPage({ params }: CategoriesPageProps) {
         <div className="flex items-center justify-center gap-2">
           <button
             type="button"
-            onClick={() => toggleVisibility(item.id)}
+            onClick={() => toggleVisibility(item.id, item.isVisible)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
               item.isVisible ? "bg-olive" : "bg-[#c8beba]"
             }`}
@@ -114,19 +172,20 @@ export default function AdminCategoriesPage({ params }: CategoriesPageProps) {
     },
     {
       header: isRtl ? "الإجراءات" : "Actions",
-      accessor: () => (
+      accessor: (item: CategoryItem) => (
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Link
+            href={`/${locale}/admin/categories/${item.id}/edit`}
             aria-label="Edit"
             className="p-1 text-[#887a75] hover:text-burgundy transition-colors cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
-          </button>
+          </Link>
           <button
             type="button"
+            onClick={() => handleDelete(item.id)}
             aria-label="Delete"
-            className="p-1 text-[#887a75] hover:text-burgundy transition-colors cursor-pointer"
+            className="p-1 text-[#887a75] hover:text-red-600 transition-colors cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -134,6 +193,14 @@ export default function AdminCategoriesPage({ params }: CategoriesPageProps) {
       ),
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-burgundy" />
+      </div>
+    );
+  }
 
   return (
     <AdminDataTable
