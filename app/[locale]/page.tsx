@@ -13,6 +13,7 @@ import { InstagramSection } from "@/components/home/instagram/InstagramSection";
 import { ContactSection } from "@/components/home/contact/ContactSection";
 import { FaqSection } from "@/components/home/faq/FaqSection";
 import { Footer } from "@/components/layout/Footer";
+import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 
 interface PageProps {
   params: Promise<{ locale: "ar" | "en" }>;
@@ -42,6 +43,7 @@ async function HomeContent({ params }: PageProps) {
       <FaqSection dict={dict.Faq} />
       <ContactSection dict={dict.Contact} />
       <Footer dict={dict.Footer} locale={locale} />
+      <FloatingWhatsApp locale={locale} />
     </>
   );
 }
