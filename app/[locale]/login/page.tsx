@@ -1,27 +1,95 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, type FormEvent } from "react";
 import Link from "next/link";
-import { Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Lock,
+  Mail,
+  Phone,
+  ArrowRight,
+  ShieldCheck,
+  Loader2,
+} from "lucide-react";
+import { z } from "zod";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 interface LoginPageProps {
   params: Promise<{ locale: "ar" | "en" }>;
 }
 
+interface CountryCode {
+  code: string;
+  country: string;
+  flag: string;
+}
+
+const countryCodes: CountryCode[] = [
+  { code: "+970", country: "PS", flag: "🇵🇸" },
+  { code: "+972", country: "IL", flag: "🇵🇸" },
+];
+
 export default function LoginPage({ params }: LoginPageProps) {
   const resolvedParams = use(params);
   const locale = resolvedParams.locale;
   const isRtl = locale === "ar";
+  const router = useRouter();
+  const supabase = createClient();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [authType, setAuthType] = useState<"email" | "phone">("email");
+  const [email, setEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [countryCode, setCountryCode] = useState<string>("+970");
+  const [password, setPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errors, setErrors] = useState<{
+    identifier?: string;
+    password?: string;
+  }>({});
+
+  const emailSchema = z.object({
+    identifier: z
+      .string()
+      .min(1, isRtl ? "البريد الإلكتروني مطلوب" : "Email is required")
+      .email(
+        isRtl ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email address",
+      ),
+    password: z
+      .string()
+      .min(
+        6,
+        isRtl
+          ? "كلمة المرور يجب أن تكون 6 خانات على الأقل"
+          : "Password must be at least 6 characters",
+      ),
+  });
+
+  const phoneSchema = z.object({
+    identifier: z
+      .string()
+      .min(1, isRtl ? "رقم الجوال مطلوب" : "Phone number is required")
+      .regex(
+        /^\d{10}$/,
+        isRtl
+          ? "رقم الجوال يجب أن يتكون من 10 أرقام"
+          : "Phone number must be exactly 10 digits",
+      ),
+    password: z
+      .string()
+      .min(
+        6,
+        isRtl
+          ? "كلمة المرور يجب أن تكون 6 خانات على الأقل"
+          : "Password must be at least 6 characters",
+      ),
+  });
 
   const t = {
     brandName: isRtl ? "زركشة" : "Zarkasha",
     brandSubtitle: isRtl
       ? "تطريز فلسطيني أصيل"
       : "Authentic Palestinian Embroidery",
-    welcomeTitle: isRtl ? "أهلاً بكِ مجدداً" : "Welcome Back",
     welcomeDesc: isRtl
       ? "لوحة التحكم الخاصة بإدارة المنتجات والطلبات والتواصل مع العميلات"
       : "Manage products, orders, and customer interactions elegantly",
@@ -29,7 +97,10 @@ export default function LoginPage({ params }: LoginPageProps) {
     subtitle: isRtl
       ? "أدخلي بيانات الحساب للوصول للوحة التحكم"
       : "Enter your credentials to access the admin panel",
+    emailTab: isRtl ? "البريد الإلكتروني" : "Email",
+    phoneTab: isRtl ? "رقم الجوال" : "Phone Number",
     emailLabel: isRtl ? "البريد الإلكتروني" : "Email Address",
+    phoneLabel: isRtl ? "رقم الجوال (10 أرقام)" : "Phone Number (10 digits)",
     passwordLabel: isRtl ? "كلمة المرور" : "Password",
     submitBtn: isRtl ? "تسجيل الدخول للوحة التحكم" : "Sign In to Dashboard",
     orDivider: isRtl ? "أو" : "OR",
@@ -40,13 +111,94 @@ export default function LoginPage({ params }: LoginPageProps) {
       : "Secure area restricted to authorized staff",
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert(isRtl ? "تم تسجيل الدخول بنجاح!" : "Signed in successfully!");
+    setErrors({});
+
+    const activeSchema = authType === "email" ? emailSchema : phoneSchema;
+    const currentIdentifier = authType === "email" ? email : phone;
+
+    const result = activeSchema.safeParse({
+      identifier: currentIdentifier,
+      password,
+    });
+
+    if (!result.success) {
+      const fieldErrors: { identifier?: string; password?: string } = {};
+      result.error.issues.forEach((issue) => {
+        if (issue.path[0] === "identifier")
+          fieldErrors.identifier = issue.message;
+        if (issue.path[0] === "password") fieldErrors.password = issue.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setLoading(true);
+
+    if (authType === "email") {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(isRtl ? "خطأ في تسجيل الدخول" : "Authentication Error", {
+          description: error.message,
+        });
+        setLoading(false);
+      } else {
+        setEmail("");
+        setPassword("");
+        toast.success(
+          isRtl ? "تم تسجيل الدخول بنجاح" : "Signed in successfully",
+        );
+        router.push(`/${locale}/admin`);
+        router.refresh();
+      }
+    } else {
+      const formattedPhone = `${countryCode}${phone}`;
+      const { error } = await supabase.auth.signInWithPassword({
+        phone: formattedPhone,
+        password,
+      });
+
+      if (error) {
+        toast.error(isRtl ? "خطأ في تسجيل الدخول" : "Authentication Error", {
+          description: error.message,
+        });
+        setLoading(false);
+      } else {
+        setPhone("");
+        setPassword("");
+        toast.success(
+          isRtl ? "تم تسجيل الدخول بنجاح" : "Signed in successfully",
+        );
+        router.push(`/${locale}/admin`);
+        router.refresh();
+      }
+    }
   };
 
-  const handleGoogleLogin = () => {
-    alert(isRtl ? "جاري الاتصال بحساب جوجل..." : "Connecting with Google...");
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/${locale}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      toast.error(
+        isRtl ? "فشل الاتصال بحساب Google" : "Google Sign-In failed",
+        {
+          description: error.message,
+        },
+      );
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,9 +206,7 @@ export default function LoginPage({ params }: LoginPageProps) {
       className="min-h-screen bg-[#f7f5f2] flex font-tajawal"
       dir={isRtl ? "rtl" : "ltr"}
     >
-      {/* Visual Brand Side (Hidden on Mobile) */}
       <div className="hidden lg:flex lg:w-1/2 bg-burgundy text-ivory relative flex-col justify-between p-12 overflow-hidden">
-        {/* Subtle Decorative Pattern Background */}
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
 
         <div className="relative z-10 space-y-2">
@@ -83,10 +233,8 @@ export default function LoginPage({ params }: LoginPageProps) {
         </div>
       </div>
 
-      {/* Login Form Side */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-[#fbf9f6]">
         <div className="max-w-md w-full space-y-6">
-          {/* Mobile Header Brand */}
           <div className="lg:hidden text-center space-y-1">
             <h1 className="font-amiri text-3xl font-normal text-burgundy">
               {t.brandName}
@@ -103,11 +251,11 @@ export default function LoginPage({ params }: LoginPageProps) {
             </p>
           </div>
 
-          {/* Google Sign In Button */}
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full h-12 bg-ivory border border-burgundy/20 rounded-[3px] text-xs font-medium text-brown hover:bg-burgundy/5 transition-all shadow-2xs flex items-center justify-center gap-3 cursor-pointer"
+            disabled={loading}
+            className="w-full h-12 bg-ivory border border-burgundy/20 rounded-[3px] text-xs font-medium text-brown hover:bg-burgundy/5 transition-all shadow-2xs flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
@@ -138,25 +286,108 @@ export default function LoginPage({ params }: LoginPageProps) {
             <div className="flex-1 h-px bg-burgundy/15" />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-brown">
-                {t.emailLabel}
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="admin@zarkasha.com"
-                  className="w-full h-12 px-4 bg-ivory border border-burgundy/20 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy focus:ring-1 focus:ring-burgundy/35 transition-all ltr:text-left rtl:text-right shadow-2xs"
-                />
-                <Mail
-                  className={`w-4 h-4 text-[#a0928d] absolute ${isRtl ? "left-3.5" : "right-3.5"} top-1/2 -translate-y-1/2`}
-                />
+          <div className="grid grid-cols-2 gap-2 bg-burgundy/5 p-1 rounded-[4px] border border-burgundy/10">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthType("email");
+                setErrors({});
+              }}
+              className={`h-9 rounded-[3px] text-xs font-medium transition-all cursor-pointer ${
+                authType === "email"
+                  ? "bg-burgundy text-ivory shadow-2xs"
+                  : "text-brown hover:text-burgundy"
+              }`}
+            >
+              {t.emailTab}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthType("phone");
+                setErrors({});
+              }}
+              className={`h-9 rounded-[3px] text-xs font-medium transition-all cursor-pointer ${
+                authType === "phone"
+                  ? "bg-burgundy text-ivory shadow-2xs"
+                  : "text-brown hover:text-burgundy"
+              }`}
+            >
+              {t.phoneTab}
+            </button>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            {authType === "email" ? (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-brown">
+                  {t.emailLabel}
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@zarkasha.com"
+                    className={`w-full h-12 px-4 bg-ivory border ${
+                      errors.identifier
+                        ? "border-red-500"
+                        : "border-burgundy/20"
+                    } rounded-[3px] text-xs text-brown outline-none focus:border-burgundy focus:ring-1 focus:ring-burgundy/35 transition-all ltr:text-left rtl:text-right shadow-2xs`}
+                  />
+                  <Mail
+                    className={`w-4 h-4 text-[#a0928d] absolute ${isRtl ? "left-3.5" : "right-3.5"} top-1/2 -translate-y-1/2`}
+                  />
+                </div>
+                {errors.identifier && (
+                  <p className="text-[11px] text-red-500">
+                    {errors.identifier}
+                  </p>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-brown">
+                  {t.phoneLabel}
+                </label>
+                <div className="flex gap-2" dir="ltr">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="h-12 px-2 bg-ivory border border-burgundy/20 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy cursor-pointer shadow-2xs"
+                  >
+                    {countryCodes.map((item) => (
+                      <option key={item.code} value={item.code}>
+                        {item.flag} {item.code}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="relative flex-1">
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      value={phone}
+                      onChange={(e) =>
+                        setPhone(e.target.value.replace(/\D/g, ""))
+                      }
+                      placeholder="0590000000"
+                      className={`w-full h-12 px-4 bg-ivory border ${
+                        errors.identifier
+                          ? "border-red-500"
+                          : "border-burgundy/20"
+                      } rounded-[3px] text-xs text-brown outline-none focus:border-burgundy focus:ring-1 focus:ring-burgundy/35 transition-all ltr:text-left shadow-2xs`}
+                    />
+                    <Phone className="w-4 h-4 text-[#a0928d] absolute right-3.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+                {errors.identifier && (
+                  <p className="text-[11px] text-red-500">
+                    {errors.identifier}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-brown">
@@ -167,24 +398,35 @@ export default function LoginPage({ params }: LoginPageProps) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
                   placeholder="••••••••"
-                  className="w-full h-12 px-4 bg-ivory border border-burgundy/20 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy focus:ring-1 focus:ring-burgundy/35 transition-all shadow-2xs"
+                  className={`w-full h-12 px-4 bg-ivory border ${
+                    errors.password ? "border-red-500" : "border-burgundy/20"
+                  } rounded-[3px] text-xs text-brown outline-none focus:border-burgundy focus:ring-1 focus:ring-burgundy/35 transition-all shadow-2xs`}
                 />
                 <Lock
                   className={`w-4 h-4 text-[#a0928d] absolute ${isRtl ? "left-3.5" : "right-3.5"} top-1/2 -translate-y-1/2`}
                 />
               </div>
+              {errors.password && (
+                <p className="text-[11px] text-red-500">{errors.password}</p>
+              )}
             </div>
 
             <button
               type="submit"
-              className="w-full h-12 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-all shadow-xs cursor-pointer flex items-center justify-center gap-2 mt-2 group"
+              disabled={loading}
+              className="w-full h-12 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-all shadow-xs cursor-pointer flex items-center justify-center gap-2 mt-2 group disabled:opacity-50"
             >
-              <span>{t.submitBtn}</span>
-              <ArrowRight
-                className={`w-4 h-4 transition-transform ${isRtl ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1"}`}
-              />
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <span>{t.submitBtn}</span>
+                  <ArrowRight
+                    className={`w-4 h-4 transition-transform ${isRtl ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1"}`}
+                  />
+                </>
+              )}
             </button>
           </form>
 

@@ -1,16 +1,81 @@
 "use client";
 
-import { useState, use } from "react";
-import { Settings, Store, Truck, Lock, Save } from "lucide-react";
+import { useState, useEffect, use, type FormEvent } from "react";
+import { Settings, Store, Truck, Lock, Save, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 interface SettingsPageProps {
   params: Promise<{ locale: "ar" | "en" }>;
+}
+
+interface SiteSettingRecord {
+  key: string;
+  value: string;
 }
 
 export default function AdminSettingsPage({ params }: SettingsPageProps) {
   const resolvedParams = use(params);
   const locale = resolvedParams.locale;
   const isRtl = locale === "ar";
+  const supabase = createClient();
+
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+
+  const [settings, setSettings] = useState({
+    storeName: "زركشة | Zarkasha",
+    whatsapp: "0592749393",
+    instagram: "@zarkasha",
+    adminEmail: "zarkasha.303@gmail.com",
+    newPassword: "",
+    shippingWestBank: "2",
+    shippingJerusalem: "5",
+    shippingInside: "3",
+    acceptingOrders: true,
+    showFeatured: true,
+    emailNotification: true,
+    maintenanceMode: false,
+  });
+
+  useEffect(() => {
+    async function fetchSettings() {
+      const { data, error } = await supabase.from("site_settings").select("*");
+
+      if (error) {
+        toast.error(isRtl ? "فشل تحميل الإعدادات" : "Failed to load settings");
+      } else if (data) {
+        const fetchedData = data as SiteSettingRecord[];
+        const newSettings: Partial<typeof settings> = {};
+
+        fetchedData.forEach((item) => {
+          if (item.key === "store_name") newSettings.storeName = item.value;
+          if (item.key === "whatsapp") newSettings.whatsapp = item.value;
+          if (item.key === "instagram") newSettings.instagram = item.value;
+          if (item.key === "admin_email") newSettings.adminEmail = item.value;
+          if (item.key === "shipping_west_bank")
+            newSettings.shippingWestBank = item.value;
+          if (item.key === "shipping_jerusalem")
+            newSettings.shippingJerusalem = item.value;
+          if (item.key === "shipping_inside")
+            newSettings.shippingInside = item.value;
+          if (item.key === "accepting_orders")
+            newSettings.acceptingOrders = item.value === "true";
+          if (item.key === "show_featured")
+            newSettings.showFeatured = item.value === "true";
+          if (item.key === "email_notification")
+            newSettings.emailNotification = item.value === "true";
+          if (item.key === "maintenance_mode")
+            newSettings.maintenanceMode = item.value === "true";
+        });
+
+        setSettings((prev) => ({ ...prev, ...newSettings }));
+      }
+      setLoading(false);
+    }
+
+    fetchSettings();
+  }, [supabase, isRtl]);
 
   const t = {
     title: isRtl ? "الإعدادات" : "Settings",
@@ -44,21 +109,6 @@ export default function AdminSettingsPage({ params }: SettingsPageProps) {
     saveChanges: isRtl ? "حفظ التغييرات" : "Save Changes",
   };
 
-  const [settings, setSettings] = useState({
-    storeName: "زركشة | Zarkasha",
-    whatsapp: "+970...",
-    instagram: "@...",
-    adminEmail: "admin@...",
-    newPassword: "",
-    shippingWestBank: "2",
-    shippingJerusalem: "5",
-    shippingInside: "3",
-    acceptingOrders: true,
-    showFeatured: true,
-    emailNotification: true,
-    maintenanceMode: false,
-  });
-
   const handleToggle = (key: keyof typeof settings) => {
     setSettings((prev) => ({
       ...prev,
@@ -66,10 +116,64 @@ export default function AdminSettingsPage({ params }: SettingsPageProps) {
     }));
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert(isRtl ? "تم حفظ الإعدادات بنجاح!" : "Settings saved successfully!");
+    setSaving(true);
+
+    const payload = [
+      { key: "store_name", value: settings.storeName },
+      { key: "whatsapp", value: settings.whatsapp },
+      { key: "instagram", value: settings.instagram },
+      { key: "admin_email", value: settings.adminEmail },
+      { key: "shipping_west_bank", value: settings.shippingWestBank },
+      { key: "shipping_jerusalem", value: settings.shippingJerusalem },
+      { key: "shipping_inside", value: settings.shippingInside },
+      { key: "accepting_orders", value: String(settings.acceptingOrders) },
+      { key: "show_featured", value: String(settings.showFeatured) },
+      { key: "email_notification", value: String(settings.emailNotification) },
+      { key: "maintenance_mode", value: String(settings.maintenanceMode) },
+    ];
+
+    const { error } = await supabase.from("site_settings").upsert(payload);
+
+    if (error) {
+      toast.error(isRtl ? "فشل حفظ الإعدادات" : "Failed to save settings", {
+        description: error.message,
+      });
+      setSaving(false);
+      return;
+    }
+
+    if (settings.newPassword.trim().length >= 6) {
+      const { error: pwdError } = await supabase.auth.updateUser({
+        password: settings.newPassword,
+      });
+      if (pwdError) {
+        toast.error(
+          isRtl ? "فشل تحديث كلمة المرور" : "Failed to update password",
+          {
+            description: pwdError.message,
+          },
+        );
+        setSaving(false);
+        return;
+      }
+    }
+
+    toast.success(
+      isRtl ? "تم حفظ الإعدادات بنجاح!" : "Settings saved successfully!",
+    );
+    setSettings((prev) => ({ ...prev, newPassword: "" }));
+    setSaving(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-burgundy" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 font-tajawal max-w-6xl mx-auto pb-12">
@@ -84,9 +188,7 @@ export default function AdminSettingsPage({ params }: SettingsPageProps) {
         onSubmit={handleSave}
         className="grid grid-cols-1 lg:grid-cols-2 gap-6"
       >
-        {/* Left Column: Store Info & Shipping */}
         <div className="space-y-6">
-          {/* Store Information */}
           <div className="bg-[#fbf9f6] border border-burgundy/10 rounded-[4px] p-6 shadow-xs space-y-4">
             <h2 className="font-amiri text-xl text-burgundy border-b border-burgundy/10 pb-3 flex items-center gap-2">
               <Store className="w-4 h-4 text-olive" />
@@ -129,7 +231,7 @@ export default function AdminSettingsPage({ params }: SettingsPageProps) {
                 </label>
                 <input
                   type="text"
-                  value="hello@..."
+                  value={settings.adminEmail}
                   disabled
                   className="w-full h-10 px-3 bg-ivory/60 border border-burgundy/10 rounded-[3px] text-xs text-[#887a75] outline-none cursor-not-allowed ltr:text-left"
                 />
@@ -150,7 +252,6 @@ export default function AdminSettingsPage({ params }: SettingsPageProps) {
             </div>
           </div>
 
-          {/* Shipping & Payment */}
           <div className="bg-[#fbf9f6] border border-burgundy/10 rounded-[4px] p-6 shadow-xs space-y-4">
             <div className="border-b border-burgundy/10 pb-3 flex items-center justify-between">
               <h2 className="font-amiri text-xl text-burgundy flex items-center gap-2">
@@ -213,9 +314,7 @@ export default function AdminSettingsPage({ params }: SettingsPageProps) {
           </div>
         </div>
 
-        {/* Right Column: Store Options & Admin Account */}
         <div className="space-y-6">
-          {/* Store Options (Toggles) */}
           <div className="bg-[#fbf9f6] border border-burgundy/10 rounded-[4px] p-6 shadow-xs space-y-5">
             <h2 className="font-amiri text-xl text-burgundy border-b border-burgundy/10 pb-3 flex items-center gap-2">
               <Settings className="w-4 h-4 text-olive" />
@@ -274,7 +373,6 @@ export default function AdminSettingsPage({ params }: SettingsPageProps) {
             ))}
           </div>
 
-          {/* Admin Account */}
           <div className="bg-[#fbf9f6] border border-burgundy/10 rounded-[4px] p-6 shadow-xs space-y-4">
             <h2 className="font-amiri text-xl text-burgundy border-b border-burgundy/10 pb-3 flex items-center gap-2">
               <Lock className="w-4 h-4 text-olive" />
@@ -313,10 +411,17 @@ export default function AdminSettingsPage({ params }: SettingsPageProps) {
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full h-11 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                disabled={saving}
+                className="w-full h-11 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
-                <Save className="w-4 h-4" />
-                <span>{t.saveChanges}</span>
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>{t.saveChanges}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
