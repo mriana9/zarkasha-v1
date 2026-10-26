@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Heart, ShoppingBag, ArrowRight, ArrowLeft } from "lucide-react";
 import { ProductQuickViewModal } from "./ProductQuickViewModal";
+import { useCart } from "@/context/CartContext";
 
 interface ProductCardProps {
   product: {
@@ -24,7 +25,6 @@ interface ProductCardProps {
   };
   locale: "ar" | "en";
   isRtl: boolean;
-  onAddToCart?: () => void;
   onToggleFavorite?: () => void;
 }
 
@@ -32,10 +32,10 @@ export function ProductCard({
   product,
   locale,
   isRtl,
-  onAddToCart,
   onToggleFavorite,
 }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { addToCart } = useCart();
 
   const title = locale === "ar" ? product.title_ar : product.title_en;
   const categoryName =
@@ -74,7 +74,7 @@ export function ProductCard({
 
           <button
             type="button"
-            onClick={onAddToCart}
+            onClick={() => addToCart(product)}
             className="absolute inset-x-0 bottom-0 py-3 bg-[#5d1826]/90 backdrop-blur-xs text-[#fffcf9] text-xs font-tajawal font-medium flex items-center justify-center gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 cursor-pointer hover:bg-[#5d1826] z-10"
           >
             <ShoppingBag className="w-[17px] h-[17px]" />
@@ -127,7 +127,7 @@ export function ProductCard({
         isRtl={isRtl}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAddToCart={onAddToCart}
+        onAddToCart={() => addToCart(product)}
         onToggleFavorite={onToggleFavorite}
       />
     </>

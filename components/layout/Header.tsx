@@ -8,6 +8,7 @@ import { MobileMenu } from "./MobileMenu";
 import { SearchOverlay } from "./SearchOverlay";
 import { CartDrawer } from "./CartDrawer";
 import { HeaderActions } from "./HeaderActions";
+import { useCart } from "@/context/CartContext";
 
 interface HeaderProps {
   dict: {
@@ -35,7 +36,9 @@ interface HeaderProps {
 export function Header({ dict, searchDict, cartDict, locale }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { isCartOpen, setIsCartOpen } = useCart();
+
+  const isRtl = locale === "ar";
 
   return (
     <>
@@ -54,7 +57,6 @@ export function Header({ dict, searchDict, cartDict, locale }: HeaderProps) {
 
         <HeaderActions
           onOpenSearch={() => setIsSearchOpen(true)}
-          onOpenCart={() => setIsCartOpen(true)}
           locale={locale}
           dict={dict}
         />
@@ -76,6 +78,8 @@ export function Header({ dict, searchDict, cartDict, locale }: HeaderProps) {
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
+        locale={locale as "ar" | "en"}
+        isRtl={isRtl}
         dict={cartDict}
       />
     </>
