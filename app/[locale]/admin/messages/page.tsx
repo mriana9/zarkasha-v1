@@ -1,7 +1,16 @@
 "use client";
 
-import { useState, use } from "react";
-import { Search, Trash2, Send, MessageCircle, CheckCheck } from "lucide-react";
+import { useState, useEffect, use } from "react";
+import {
+  Search,
+  Trash2,
+  Send,
+  MessageCircle,
+  CheckCheck,
+  Loader2,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface MessageItem {
   id: string;
@@ -23,6 +32,7 @@ interface MessagesPageProps {
 }
 
 export default function AdminMessagesPage({ params }: MessagesPageProps) {
+  const supabase = createClient();
   const resolvedParams = use(params);
   const locale = resolvedParams.locale;
   const isRtl = locale === "ar";
@@ -46,90 +56,72 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
     },
   };
 
+  const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTab, setFilterTab] = useState<"all" | "unread" | "notReplied">(
     "all",
   );
-
-  const [messages, setMessages] = useState<MessageItem[]>([
-    {
-      id: "1",
-      senderName: isRtl ? "مرسلة 1" : "Sender 1",
-      senderEmail: "sender1@example.com",
-      senderPhone: "+962700000001",
-      subject: isRtl ? "طلب قطعة خاصة" : "Custom Piece Request",
-      preview: isRtl
-        ? "نص الرسالة يظهر هنا باختصار..."
-        : "Message preview text here...",
-      fullMessage: isRtl
-        ? "نص رسالة العميلة: تفاصيل القطعة والألوان والمناسبة..."
-        : "Customer message text: details about the piece, colors, and occasion...",
-      type: "custom",
-      time: isRtl ? "منذ ساعة" : "1 hour ago",
-      date: "2026-06-14",
-      isRead: false,
-      isReplied: false,
-    },
-    {
-      id: "2",
-      senderName: isRtl ? "مرسلة 2" : "Sender 2",
-      senderEmail: "sender2@example.com",
-      senderPhone: "+962700000002",
-      subject: isRtl ? "استفسار" : "Inquiry",
-      preview: isRtl
-        ? "نص الرسالة يظهر هنا باختصار..."
-        : "Message preview text here...",
-      fullMessage: isRtl
-        ? "استفسار بخصوص موعد توصيل التطريزات إلى عمان..."
-        : "Inquiry regarding delivery times to Amman...",
-      type: "inquiry",
-      time: isRtl ? "منذ ساعة" : "1 hour ago",
-      date: "2026-06-14",
-      isRead: true,
-      isReplied: true,
-    },
-    {
-      id: "3",
-      senderName: isRtl ? "مرسلة 3" : "Sender 3",
-      senderEmail: "sender3@example.com",
-      senderPhone: "+962700000003",
-      subject: isRtl ? "طلب قطعة خاصة" : "Custom Piece Request",
-      preview: isRtl
-        ? "نص الرسالة يظهر هنا باختصار..."
-        : "Message preview text here...",
-      fullMessage: isRtl
-        ? "أرغب بتصميم ثوب مطرز تراثي بمقاس خاص..."
-        : "I would like to design a traditional embroidered thobe with custom sizing...",
-      type: "custom",
-      time: isRtl ? "منذ ساعة" : "1 hour ago",
-      date: "2026-06-13",
-      isRead: true,
-      isReplied: false,
-    },
-    {
-      id: "4",
-      senderName: isRtl ? "مرسلة 4" : "Sender 4",
-      senderEmail: "sender4@example.com",
-      senderPhone: "+962700000004",
-      subject: isRtl ? "استفسار" : "Inquiry",
-      preview: isRtl
-        ? "نص الرسالة يظهر هنا باختصار..."
-        : "Message preview text here...",
-      fullMessage: isRtl
-        ? "هل يتوفر الشحن الدولي لكندا؟"
-        : "Is international shipping to Canada available?",
-      type: "inquiry",
-      time: isRtl ? "منذ ساعة" : "1 hour ago",
-      date: "2026-06-12",
-      isRead: false,
-      isReplied: false,
-    },
-  ]);
-
-  const [selectedMessage, setSelectedMessage] = useState<MessageItem>(
-    messages[0],
+  const [selectedMessage, setSelectedMessage] = useState<MessageItem | null>(
+    null,
   );
   const [replyText, setReplyText] = useState("");
+
+  useEffect(() => {
+    async function fetchMessages() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("contact_messages")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        toast.error(isRtl ? "فشل تحميل الرسائل" : "Failed to load messages");
+      } else if (data) {
+        const formatted: MessageItem[] = data.map((item) => {
+          const msgText = item.message || "";
+          return {
+            id: item.id,
+            senderName: item.full_name || (isRtl ? "مجهول" : "Unknown"),
+            senderEmail: item.email || "",
+            senderPhone: item.phone || "",
+            subject:
+              item.subject === "custom"
+                ? isRtl
+                  ? "طلب قطعة خاصة / مطرزة باسم"
+                  : "Custom Piece Request"
+                : item.subject === "inquiry"
+                  ? isRtl
+                    ? "استفسار عن طلب قائم"
+                    : "Order Inquiry"
+                  : isRtl
+                    ? "استفسار عام"
+                    : "General Inquiry",
+            preview:
+              msgText.length > 40 ? msgText.slice(0, 40) + "..." : msgText,
+            fullMessage: msgText,
+            type: item.subject === "custom" ? "custom" : "inquiry",
+            time: new Date(item.created_at).toLocaleTimeString(
+              locale === "ar" ? "ar-SA" : "en-US",
+              { hour: "2-digit", minute: "2-digit" },
+            ),
+            date: new Date(item.created_at).toLocaleDateString("en-CA"),
+            isRead: item.is_read ?? false,
+            isReplied: item.is_replied ?? false,
+          };
+        });
+
+        setMessages(formatted);
+        if (formatted.length > 0) {
+          setSelectedMessage(formatted[0]);
+        }
+      }
+      setLoading(false);
+    }
+
+    void fetchMessages();
+  }, [supabase, isRtl, locale]);
 
   const unreadCount = messages.filter((m) => !m.isRead).length;
   const notRepliedCount = messages.filter((m) => !m.isReplied).length;
@@ -137,44 +129,123 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
   const filteredMessages = messages.filter((m) => {
     const matchesSearch =
       m.senderName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      m.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.senderEmail.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (filterTab === "unread") return matchesSearch && !m.isRead;
     if (filterTab === "notReplied") return matchesSearch && !m.isReplied;
     return matchesSearch;
   });
 
-  const handleSelectMessage = (msg: MessageItem) => {
+  const handleSelectMessage = async (msg: MessageItem) => {
     setSelectedMessage(msg);
-    setMessages((prev) =>
-      prev.map((m) => (m.id === msg.id ? { ...m, isRead: true } : m)),
-    );
-  };
+    setReplyText(""); // مسح الرد القديم عند الانتقال لرسالة أخرى
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = messages.filter((m) => m.id !== id);
-    setMessages(updated);
-    if (selectedMessage?.id === id && updated.length > 0) {
-      setSelectedMessage(updated[0]);
+    if (!msg.isRead) {
+      const { error } = await supabase
+        .from("contact_messages")
+        .update({ is_read: true })
+        .eq("id", msg.id);
+
+      if (!error) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msg.id ? { ...m, isRead: true } : m)),
+        );
+      }
     }
   };
 
-  const handleSendReply = () => {
-    if (!replyText.trim()) return;
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { error } = await supabase
+      .from("contact_messages")
+      .delete()
+      .eq("id", id);
 
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === selectedMessage.id
-          ? { ...m, isReplied: true, isRead: true }
-          : m,
-      ),
+    if (error) {
+      console.error(error);
+      toast.error(isRtl ? "فشل حذف الرسالة" : "Failed to delete message");
+      return;
+    }
+
+    const updated = messages.filter((m) => m.id !== id);
+    setMessages(updated);
+    if (selectedMessage?.id === id) {
+      setSelectedMessage(updated.length > 0 ? updated[0] : null);
+      setReplyText("");
+    }
+    toast.success(
+      isRtl ? "تم حذف الرسالة بنجاح" : "Message deleted successfully",
     );
-    setSelectedMessage((prev) => ({ ...prev, isReplied: true, isRead: true }));
-
-    alert(isRtl ? "تم إرسال الرد بنجاح!" : "Reply sent successfully!");
-    setReplyText("");
   };
+
+  const markAsReplied = async (id: string) => {
+    const { error } = await supabase
+      .from("contact_messages")
+      .update({ is_replied: true, is_read: true })
+      .eq("id", id);
+
+    if (!error) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === id ? { ...m, isReplied: true, isRead: true } : m,
+        ),
+      );
+      setSelectedMessage((prev) =>
+        prev ? { ...prev, isReplied: true, isRead: true } : null,
+      );
+    }
+  };
+
+  const handleWhatsAppReply = async () => {
+    if (!selectedMessage) return;
+    await markAsReplied(selectedMessage.id);
+
+    const messageContent = isRtl
+      ? `مرحباً ${selectedMessage.senderName}،\n\nبخصوص رسالتكِ: "${selectedMessage.fullMessage}"\n\nالرد:\n${replyText}`
+      : `Hello ${selectedMessage.senderName},\n\nRegarding your message: "${selectedMessage.fullMessage}"\n\nReply:\n${replyText}`;
+
+    const cleanPhone = selectedMessage.senderPhone.replace(/\D/g, "");
+    const whatsappUrl = `https://wa.me/+97${cleanPhone}?text=${encodeURIComponent(
+      messageContent,
+    )}`;
+    window.open(whatsappUrl, "_blank");
+    toast.success(
+      isRtl
+        ? "تم فتح واتساب وتحديث حالة الرسالة"
+        : "Opened WhatsApp and updated status",
+    );
+  };
+
+  const handleEmailReply = async () => {
+    if (!selectedMessage) return;
+    await markAsReplied(selectedMessage.id);
+
+    const emailSubject = encodeURIComponent(
+      `Re: ${selectedMessage.subject} - Zarkasha`,
+    );
+    const emailBody = encodeURIComponent(
+      isRtl
+        ? `مرحباً ${selectedMessage.senderName}،\n\nبخصوص رسالتكِ السابقة:\n"${selectedMessage.fullMessage}"\n\n--------------------------\n${replyText}`
+        : `Hello ${selectedMessage.senderName},\n\nRegarding your previous message:\n"${selectedMessage.fullMessage}"\n\n--------------------------\n${replyText}`,
+    );
+
+    const mailtoUrl = `mailto:${selectedMessage.senderEmail}?subject=${emailSubject}&body=${emailBody}`;
+    window.location.href = mailtoUrl;
+    toast.success(
+      isRtl
+        ? "تم فتح البريد الإلكتروني وتحديث حالة الرسالة"
+        : "Opened email client and updated status",
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 text-burgundy animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 font-tajawal max-w-7xl mx-auto">
@@ -232,35 +303,19 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
                   className="w-full p-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy resize-none"
                 />
 
-                {/* Buttons wrapper: w-full on mobile, flex-row on desktop */}
                 <div className="flex flex-col sm:flex-row items-center justify-end gap-3">
-                  <a
-                    href={`https://wa.me/${selectedMessage.senderPhone}?text=${encodeURIComponent(replyText)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => {
-                      setMessages((prev) =>
-                        prev.map((m) =>
-                          m.id === selectedMessage.id
-                            ? { ...m, isReplied: true, isRead: true }
-                            : m,
-                        ),
-                      );
-                      setSelectedMessage((prev) => ({
-                        ...prev,
-                        isReplied: true,
-                        isRead: true,
-                      }));
-                    }}
-                    className="w-full sm:w-auto px-5 py-2.5 bg-[#25D366] text-white rounded-[3px] text-xs font-medium hover:bg-[#20ba5a] transition-colors shadow-xs flex items-center justify-center gap-2"
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppReply}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-[#25D366] text-white rounded-[3px] text-xs font-medium hover:bg-[#20ba5a] transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span>{t.whatsappBtn}</span>
-                  </a>
+                  </button>
 
                   <button
                     type="button"
-                    onClick={handleSendReply}
+                    onClick={handleEmailReply}
                     className="w-full sm:w-auto px-6 py-2.5 bg-burgundy text-ivory rounded-[3px] text-xs font-medium hover:bg-burgundy/90 transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5" />
@@ -291,7 +346,6 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
             />
           </div>
 
-          {/* Filter Badges under Search */}
           <div className="flex items-center gap-1.5 pt-1 overflow-x-auto pb-1">
             <button
               type="button"
@@ -316,7 +370,11 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
             >
               <span>{t.filters.unread}</span>
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[9px] ${filterTab === "unread" ? "bg-ivory/20 text-ivory" : "bg-burgundy/10 text-burgundy font-bold"}`}
+                className={`px-1.5 py-0.2 rounded-full text-[9px] ${
+                  filterTab === "unread"
+                    ? "bg-ivory/20 text-ivory"
+                    : "bg-burgundy/10 text-burgundy font-bold"
+                }`}
               >
                 {unreadCount}
               </span>
@@ -333,7 +391,11 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
             >
               <span>{t.filters.notReplied}</span>
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[9px] ${filterTab === "notReplied" ? "bg-ivory/20 text-ivory" : "bg-olive/15 text-olive font-bold"}`}
+                className={`px-1.5 py-0.2 rounded-full text-[9px] ${
+                  filterTab === "notReplied"
+                    ? "bg-ivory/20 text-ivory"
+                    : "bg-olive/15 text-olive font-bold"
+                }`}
               >
                 {notRepliedCount}
               </span>
@@ -345,7 +407,7 @@ export default function AdminMessagesPage({ params }: MessagesPageProps) {
               filteredMessages.map((msg) => (
                 <div
                   key={msg.id}
-                  onClick={() => handleSelectMessage(msg)}
+                  onClick={() => void handleSelectMessage(msg)}
                   className={`p-3.5 rounded-[3px] border transition-all cursor-pointer space-y-1.5 relative ${
                     selectedMessage?.id === msg.id
                       ? "bg-ivory border-burgundy/30 shadow-xs"
