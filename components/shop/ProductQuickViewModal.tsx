@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, Heart, ShoppingBag } from "lucide-react";
+import { X, Heart, ShoppingBag, MessageCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface ProductQuickViewModalProps {
   product: {
@@ -38,7 +39,36 @@ export function ProductQuickViewModal({
   onAddToCart,
   onToggleFavorite,
 }: ProductQuickViewModalProps) {
+  const supabase = createClient();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [phoneNumber, setPhoneNumber] = useState<string>("970592749393");
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchWhatsAppSetting() {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "whatsapp")
+        .single();
+
+      if (!error && data && data.value && isActive) {
+        const cleanedNumber = data.value.replace(/\D/g, "");
+        if (cleanedNumber) {
+          setPhoneNumber(cleanedNumber);
+        }
+      }
+    }
+
+    if (isOpen) {
+      void fetchWhatsAppSetting();
+    }
+
+    return () => {
+      isActive = false;
+    };
+  }, [isOpen, supabase]);
 
   if (!isOpen) return null;
 
@@ -53,6 +83,19 @@ export function ProductQuickViewModal({
       ? product.images
       : ["/categories/book.png"];
   const activeImageSrc = images[activeImageIndex] || images[0];
+
+  const handleWhatsAppInquiry = () => {
+    const message =
+      locale === "ar"
+        ? `مرحباً، أود الاستفسار عن هذا المنتج:\n*${title}*\nالسعر: ${product.price} شيكل\nرابط المنتج: ${window.location.href}`
+        : `Hello, I would like to inquire about this product:\n*${title}*\nPrice: ${product.price} ILS`;
+
+    const encodedMessage = encodeURIComponent(message);
+    window.open(
+      `https://wa.me/${phoneNumber}?text=${encodedMessage}`,
+      "_blank",
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
@@ -140,27 +183,42 @@ export function ProductQuickViewModal({
               </span>
             </div>
 
-            <div className="flex items-center gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onAddToCart}
-                className="flex-1 py-3 bg-[#5d1826] text-[#fffcf9] rounded-[3px] text-xs font-medium flex items-center justify-center gap-2 hover:bg-[#5d1826]/90 transition-colors cursor-pointer shadow-sm"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span>
-                  {locale === "ar" ? "أضيفي إلى السلة" : "Add to Bag"}
-                </span>
-              </button>
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onAddToCart}
+                  className="flex-1 py-3 bg-[#5d1826] text-[#fffcf9] rounded-[3px] text-xs font-medium flex items-center justify-center gap-2 hover:bg-[#5d1826]/90 transition-colors cursor-pointer shadow-sm"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>
+                    {locale === "ar" ? "أضيفي إلى السلة" : "Add to Bag"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onToggleFavorite}
+                  className="w-11 h-11 rounded-[3px] border border-[#5d1826]/20 flex items-center justify-center text-[#5d1826] hover:bg-[#5d1826]/5 transition-colors cursor-pointer"
+                  aria-label={
+                    locale === "ar" ? "إضافة للمفضلة" : "Add to favorites"
+                  }
+                >
+                  <Heart className="w-5 h-5" />
+                </button>
+              </div>
 
               <button
                 type="button"
-                onClick={onToggleFavorite}
-                className="w-11 h-11 rounded-[3px] border border-[#5d1826]/20 flex items-center justify-center text-[#5d1826] hover:bg-[#5d1826]/5 transition-colors cursor-pointer"
-                aria-label={
-                  locale === "ar" ? "إضافة للمفضلة" : "Add to favorites"
-                }
+                onClick={handleWhatsAppInquiry}
+                className="w-full py-2.5 bg-[#25D366] text-white rounded-[3px] text-xs font-medium flex items-center justify-center gap-2 hover:bg-[#20ba5a] transition-colors cursor-pointer"
               >
-                <Heart className="w-5 h-5" />
+                <MessageCircle className="w-4 h-4" />
+                <span>
+                  {locale === "ar"
+                    ? "استفسري عن المنتج عبر الواتساب"
+                    : "Inquire via WhatsApp"}
+                </span>
               </button>
             </div>
           </div>
