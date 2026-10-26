@@ -106,7 +106,7 @@ export function ShopHero({ dict, locale }: ShopHeroProps) {
           />
         </div>
 
-        <span className="absolute top-[9%] right-[5%] z-30 p-[16px_20px] bg-[#45101b]/86 backdrop-blur-[10px] text-[#fffcf9]/66 text-[9px] leading-[1.7] rounded-[4px]">
+        <span className="absolute top-[9%] right-[15%] z-30 p-[16px_20px] bg-[#45101b]/86 backdrop-blur-[10px] text-[#fffcf9]/66 text-[9px] leading-[1.7] rounded-[4px]">
           <b className="block text-[#fffcf9] font-amiri text-[18px] font-normal mb-1">
             {dict.noteTitle}
           </b>

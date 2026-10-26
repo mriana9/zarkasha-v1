@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Sparkles, Loader2 } from "lucide-react";
+import { Search, Sparkles, Loader2, ArrowUpDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ProductCard } from "./ProductCard";
 
@@ -41,6 +41,8 @@ interface ShopCatalogProps {
   locale: "ar" | "en";
 }
 
+type SortOption = "default" | "price-asc" | "price-desc";
+
 export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
   const supabase = createClient();
   const isRtl = locale === "ar";
@@ -50,6 +52,7 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<SortOption>("default");
 
   useEffect(() => {
     async function fetchData() {
@@ -86,6 +89,14 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
         }
       }
 
+      if (sortOrder === "price-asc") {
+        query = query.order("price", { ascending: true });
+      } else if (sortOrder === "price-desc") {
+        query = query.order("price", { ascending: false });
+      } else {
+        query = query.order("created_at", { ascending: false });
+      }
+
       const { data: prodData, error } = await query;
 
       if (!error && prodData) {
@@ -96,12 +107,32 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
     }
 
     void fetchData();
-  }, [activeCategory, supabase]);
+  }, [activeCategory, sortOrder, supabase]);
 
   const filteredProducts = products.filter((p) => {
     const title = isRtl ? p.title_ar : p.title_en;
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
+
+  const toggleSort = () => {
+    if (sortOrder === "default") {
+      setSortOrder("price-asc");
+    } else if (sortOrder === "price-asc") {
+      setSortOrder("price-desc");
+    } else {
+      setSortOrder("default");
+    }
+  };
+
+  const getSortLabel = () => {
+    if (sortOrder === "price-asc") {
+      return isRtl ? "السعر: من الأقل للأعلى" : "Price: Low to High";
+    }
+    if (sortOrder === "price-desc") {
+      return isRtl ? "السعر: من الأعلى للأقل" : "Price: High to Low";
+    }
+    return dict.sortDefault;
+  };
 
   return (
     <section
@@ -176,10 +207,12 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
             />
           </div>
           <button
-            className="min-w-[118px] px-4 py-2 text-[#5d1826] border border-[#5d1826]/16 bg-transparent text-xs cursor-pointer font-tajawal rounded-[2px]"
+            onClick={toggleSort}
+            className="min-w-[150px] px-4 py-2 text-[#5d1826] border border-[#5d1826]/16 bg-transparent text-xs cursor-pointer font-tajawal rounded-[2px] flex items-center justify-center gap-2 hover:bg-[#5d1826]/5 transition-colors"
             type="button"
           >
-            {dict.sortDefault}
+            <ArrowUpDown className="w-3.5 h-3.5" />
+            <span>{getSortLabel()}</span>
           </button>
         </div>
       </div>
@@ -216,6 +249,7 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
               onClick={() => {
                 setSearchQuery("");
                 setActiveCategory("all");
+                setSortOrder("default");
               }}
             >
               {isRtl ? "عرض كل القطع" : "Show all pieces"}
