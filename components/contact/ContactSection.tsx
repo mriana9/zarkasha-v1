@@ -1,15 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  MessageCircle,
-  Camera,
-  Mail,
-  Send,
-  CheckCircle2,
-} from "lucide-react";
+import { MessageCircle, Camera, Mail, Send, CheckCircle2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface ContactSectionProps {
   dict?: {
@@ -37,6 +33,7 @@ interface ContactSectionProps {
       submitButton: string;
       submitting: string;
       successMessage: string;
+      errorMessage?: string;
     };
     info?: {
       whatsappTitle: string;
@@ -51,8 +48,54 @@ interface ContactSectionProps {
 }
 
 export function ContactSection({ dict, locale }: ContactSectionProps) {
+  const supabase = createClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
+
+  const [contactSettings, setContactSettings] = useState({
+    whatsapp: "",
+    instagram: "",
+    email: "",
+  });
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    subject: "custom",
+    message: "",
+  });
+
+  useEffect(() => {
+    async function fetchSettings() {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("key, value")
+        .in("key", ["whatsapp", "instagram", "admin_email"]);
+
+      if (!error && data) {
+        const settingsMap: {
+          whatsapp: string;
+          instagram: string;
+          email: string;
+        } = {
+          whatsapp: "",
+          instagram: "",
+          email: "",
+        };
+
+        data.forEach((item) => {
+          if (item.key === "whatsapp") settingsMap.whatsapp = item.value;
+          if (item.key === "instagram") settingsMap.instagram = item.value;
+          if (item.key === "email") settingsMap.email = item.value;
+        });
+
+        setContactSettings(settingsMap);
+      }
+    }
+
+    void fetchSettings();
+  }, [supabase]);
 
   const breadcrumb = dict?.breadcrumb || {
     home: "الرئيسية",
@@ -84,6 +127,7 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
     submitButton: "إرسال الرسالة",
     submitting: "جاري الإرسال...",
     successMessage: "تم إرسال رسالتكِ بنجاح! سنتواصل معكِ في أقرب وقت.",
+    errorMessage: "حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة لاحقاً.",
   };
 
   const info = dict?.info || {
@@ -95,15 +139,40 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
     emailSub: "للاستفسارات والتعاون",
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    const { error } = await supabase.from("contact_messages").insert({
+      full_name: formData.fullName,
+      email: formData.email,
+      phone: formData.phone,
+      subject: formData.subject,
+      message: formData.message,
+    });
+
+    if (error) {
+      console.error(error);
+      toast.error(form.errorMessage || "حدث خطأ أثناء إرسال الرسالة");
       setIsSubmitting(false);
-      setIsSent(true);
-    }, 1200);
+      return;
+    }
+
+    setIsSubmitting(false);
+    setIsSent(true);
+    toast.success(form.successMessage);
   };
+
+  const cleanWhatsapp = contactSettings.whatsapp.replace(/\D/g, "");
+  const whatsappHref = cleanWhatsapp
+    ? `https://wa.me/+97${cleanWhatsapp}`
+    : "https://wa.me/";
+  const instagramHref = contactSettings.instagram
+    ? `https://instagram.com/${contactSettings.instagram.replace("@", "")}`
+    : "https://instagram.com";
+  const emailHref = contactSettings.email
+    ? `mailto:${contactSettings.email}`
+    : "#";
 
   return (
     <section className="bg-ivory py-[80px] px-[6vw]">
@@ -135,7 +204,7 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-12 lg:gap-16 items-start">
         <div className="space-y-6">
           <a
-            href="https://wa.me/"
+            href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
             className="p-6 bg-beige/40 border border-burgundy/12 rounded-[4px] flex items-start gap-5 group hover:border-burgundy/35 transition-all block"
@@ -148,13 +217,13 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                 {info.whatsappTitle}
               </h3>
               <p className="m-0 text-[#887a75] text-xs font-tajawal leading-relaxed">
-                {info.whatsappSub}
+                {contactSettings.whatsapp || info.whatsappSub}
               </p>
             </div>
           </a>
 
           <a
-            href="https://instagram.com"
+            href={instagramHref}
             target="_blank"
             rel="noopener noreferrer"
             className="p-6 bg-beige/40 border border-burgundy/12 rounded-[4px] flex items-start gap-5 group hover:border-burgundy/35 transition-all block"
@@ -167,13 +236,16 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                 {info.instagramTitle}
               </h3>
               <p className="m-0 text-[#887a75] text-xs font-tajawal leading-relaxed">
-                {info.instagramSub}
+                {contactSettings.instagram || info.instagramSub}
               </p>
             </div>
           </a>
 
-          <div className="p-6 bg-beige/40 border border-burgundy/12 rounded-[4px] flex items-start gap-5">
-            <div className="w-12 h-12 rounded-full bg-blush text-burgundy grid place-items-center shrink-0">
+          <a
+            href={emailHref}
+            className="p-6 bg-beige/40 border border-burgundy/12 rounded-[4px] flex items-start gap-5 group hover:border-burgundy/35 transition-all block"
+          >
+            <div className="w-12 h-12 rounded-full bg-blush text-burgundy grid place-items-center shrink-0 group-hover:scale-105 transition-transform">
               <Mail className="w-5 h-5" />
             </div>
             <div>
@@ -181,10 +253,10 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                 {info.emailTitle}
               </h3>
               <p className="m-0 text-[#887a75] text-xs font-tajawal leading-relaxed">
-                {info.emailSub}
+                {contactSettings.email || info.emailSub}
               </p>
             </div>
-          </div>
+          </a>
         </div>
 
         <div className="p-8 sm:p-10 bg-burgundy text-ivory rounded-[4px] shadow-sm">
@@ -212,6 +284,10 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                 <input
                   type="text"
                   required
+                  value={formData.fullName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
                   placeholder={form.namePlaceholder}
                   className="w-full h-12 px-4 bg-white/10 border border-white/20 rounded-[2px] text-ivory placeholder:text-white/40 font-tajawal text-sm outline-none focus:border-blush transition-colors"
                 />
@@ -225,6 +301,10 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                   <input
                     type="email"
                     required
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     placeholder={form.emailPlaceholder}
                     className="w-full h-12 px-4 bg-white/10 border border-white/20 rounded-[2px] text-ivory placeholder:text-white/40 font-tajawal text-sm outline-none focus:border-blush transition-colors"
                   />
@@ -235,6 +315,10 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                   </label>
                   <input
                     type="tel"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
                     placeholder={form.phonePlaceholder}
                     className="w-full h-12 px-4 bg-white/10 border border-white/20 rounded-[2px] text-ivory placeholder:text-white/40 font-tajawal text-sm outline-none focus:border-blush transition-colors"
                   />
@@ -246,7 +330,10 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                   {form.subjectLabel}
                 </label>
                 <select
-                  defaultValue="custom"
+                  value={formData.subject}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subject: e.target.value })
+                  }
                   className="w-full h-12 px-4 bg-burgundy border border-white/20 rounded-[2px] text-ivory font-tajawal text-sm outline-none focus:border-blush transition-colors cursor-pointer"
                 >
                   <option value="custom" className="bg-burgundy text-ivory">
@@ -268,6 +355,10 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                 <textarea
                   required
                   rows={4}
+                  value={formData.message}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
                   placeholder={form.messagePlaceholder}
                   className="w-full p-4 bg-white/10 border border-white/20 rounded-[2px] text-ivory placeholder:text-white/40 font-tajawal text-sm outline-none focus:border-blush transition-colors resize-none"
                 />
