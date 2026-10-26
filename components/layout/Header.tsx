@@ -72,6 +72,7 @@ export function Header({ dict, searchDict, cartDict, locale }: HeaderProps) {
       <SearchOverlay
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
+        locale={locale as "ar" | "en"}
         dict={searchDict}
       />
 
