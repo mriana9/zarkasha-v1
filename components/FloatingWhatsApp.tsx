@@ -36,7 +36,7 @@ export function FloatingWhatsApp({ locale }: FloatingWhatsAppProps) {
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [customMessage, setCustomMessage] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("970592749393");
+  const [phoneNumber, setPhoneNumber] = useState<string>("+970592749303");
 
   const isRtl: boolean = locale === "ar";
 
@@ -77,7 +77,7 @@ export function FloatingWhatsApp({ locale }: FloatingWhatsAppProps) {
 
   const handleSendMessage = (text: string) => {
     const encodedMessage = encodeURIComponent(text);
-    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    const url = `https://wa.me/+97${phoneNumber}?text=${encodedMessage}`;
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.target = "_blank";

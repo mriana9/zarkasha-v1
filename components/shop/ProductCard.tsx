@@ -59,7 +59,7 @@ export function ProductCard({
             </span>
           )}
 
-          <button
+          {/* <button
             type="button"
             onClick={onToggleFavorite}
             aria-label={
@@ -69,8 +69,8 @@ export function ProductCard({
             }
             className="absolute top-3 end-3 w-9 h-9 rounded-full bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#5d1826] transition-all duration-300 opacity-0 group-hover:opacity-100 hover:bg-white cursor-pointer shadow-xs z-10"
           >
-            {/* <Heart className="w-[18px] h-[18px]" /> */}
-          </button>
+            <Heart className="w-[18px] h-[18px]" />
+          </button> */}
 
           <button
             type="button"

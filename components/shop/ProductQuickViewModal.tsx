@@ -87,12 +87,12 @@ export function ProductQuickViewModal({
   const handleWhatsAppInquiry = () => {
     const message =
       locale === "ar"
-        ? `مرحباً، أود الاستفسار عن هذا المنتج:\n*${title}*\nالسعر: ${product.price} شيكل\nرابط المنتج: ${window.location.href}`
+        ? `مرحباً، أود الاستفسار عن هذا المنتج:\n*${title}*\nالسعر: ${product.price} شيكل`
         : `Hello, I would like to inquire about this product:\n*${title}*\nPrice: ${product.price} ILS`;
 
     const encodedMessage = encodeURIComponent(message);
     window.open(
-      `https://wa.me/${phoneNumber}?text=${encodedMessage}`,
+      `https://wa.me/+97${phoneNumber}?text=${encodedMessage}`,
       "_blank",
     );
   };
