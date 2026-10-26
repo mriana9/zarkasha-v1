@@ -1,18 +1,12 @@
 "use client";
 
-import {
-  X,
-  ShoppingBag,
-  Trash2,
-  ArrowLeft,
-  ArrowRight,
-  Send,
-} from "lucide-react";
+import { X, ShoppingBag, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { CheckoutForm } from "../shop/CheckoutForm";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -57,6 +51,7 @@ export function CartDrawer({
     fullName: "",
     phone: "",
     address: "",
+    notes: "",
   });
 
   useEffect(() => {
@@ -140,6 +135,7 @@ export function CartDrawer({
       full_name: formData.fullName,
       phone: formData.phone,
       address: formData.address,
+      notes: formData.notes,
       region: locale === "ar" ? regionNameAr : regionNameEn,
       shipping_cost: currentShippingCost,
       items: cart.map((item) => ({
@@ -147,6 +143,7 @@ export function CartDrawer({
         title: locale === "ar" ? item.title_ar : item.title_en,
         price: item.price,
         quantity: item.quantity,
+        image: item.image,
       })),
     };
 
@@ -193,10 +190,16 @@ export function CartDrawer({
       )
       .join("\n");
 
+    const notesText = formData.notes
+      ? locale === "ar"
+        ? `ملاحظات الطلب: ${formData.notes}\n`
+        : `Notes: ${formData.notes}\n`
+      : "";
+
     const message =
       locale === "ar"
-        ? `طلب جديد (${orderNumber}):\n\nالاسم: ${formData.fullName}\nرقم الهاتـف: ${formData.phone}\nالمنطقة: ${regionNameAr}\nالعنوان: ${formData.address}\n\nالمنتجات:\n${itemsListText}\n\nسعر التوصيل: ${currentShippingCost} شيكل\nالمجموع الكلي: ${finalTotal} شيكل`
-        : `New Order (${orderNumber}):\n\nName: ${formData.fullName}\nPhone: ${formData.phone}\nRegion: ${regionNameEn}\nAddress: ${formData.address}\n\nItems:\n${itemsListText}\n\nShipping: ${currentShippingCost} ILS\nTotal: ${finalTotal} ILS`;
+        ? `طلب جديد (${orderNumber}):\n\nالاسم: ${formData.fullName}\nرقم الهاتـف: ${formData.phone}\nالمنطقة: ${regionNameAr}\nالعنوان: ${formData.address}\n${notesText}\nالمنتجات:\n${itemsListText}\n\nسعر التوصيل: ${currentShippingCost} شيكل\nالمجموع الكلي: ${finalTotal} شيكل`
+        : `New Order (${orderNumber}):\n\nName: ${formData.fullName}\nPhone: ${formData.phone}\nRegion: ${regionNameEn}\nAddress: ${formData.address}\n${notesText}\nItems:\n${itemsListText}\n\nShipping: ${currentShippingCost} ILS\nTotal: ${finalTotal} ILS`;
 
     const encodedMessage = encodeURIComponent(message);
     window.open(
@@ -347,140 +350,20 @@ export function CartDrawer({
             )}
           </>
         ) : (
-          <form
+          <CheckoutForm
+            locale={locale}
+            formData={formData}
+            setFormData={setFormData}
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+            shippingRates={shippingRates}
+            totalPrice={totalPrice}
+            currentShippingCost={currentShippingCost}
+            finalTotal={finalTotal}
+            loading={loading}
             onSubmit={handleCheckoutSubmit}
-            className="flex-1 flex flex-col justify-between py-4 space-y-4 overflow-y-auto"
-          >
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-[#5d1826] mb-1">
-                  {locale === "ar" ? "الاسم الكامل" : "Full Name"}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
-                  placeholder={
-                    locale === "ar"
-                      ? "أدخلي اسمك الكامل"
-                      : "Enter your full name"
-                  }
-                  className="w-full h-10 px-3 bg-[#fbf9f6] border border-[#5d1826]/20 rounded-[3px] text-xs text-[#231916] outline-none focus:border-[#5d1826]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#5d1826] mb-1">
-                  {locale === "ar" ? "رقم الجوال" : "Phone Number"}
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  placeholder={locale === "ar" ? "0590000000" : "0590000000"}
-                  className="w-full h-10 px-3 bg-[#fbf9f6] border border-[#5d1826]/20 rounded-[3px] text-xs text-[#231916] outline-none focus:border-[#5d1826]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#5d1826] mb-1">
-                  {locale === "ar" ? "منطقة التوصيل" : "Shipping Region"}
-                </label>
-                <select
-                  value={selectedRegion}
-                  onChange={(e) =>
-                    setSelectedRegion(e.target.value as keyof ShippingRates)
-                  }
-                  className="w-full h-10 px-3 bg-[#fbf9f6] border border-[#5d1826]/20 rounded-[3px] text-xs text-[#231916] outline-none focus:border-[#5d1826]"
-                >
-                  <option value="westBank">
-                    {locale === "ar"
-                      ? `الضفة الغربية (${shippingRates.westBank} شيكل)`
-                      : `West Bank (${shippingRates.westBank} ILS)`}
-                  </option>
-                  <option value="jerusalem">
-                    {locale === "ar"
-                      ? `القدس (${shippingRates.jerusalem} شيكل)`
-                      : `Jerusalem (${shippingRates.jerusalem} ILS)`}
-                  </option>
-                  <option value="israel48">
-                    {locale === "ar"
-                      ? `الداخل (${shippingRates.israel48} شيكل)`
-                      : `Israel (${shippingRates.israel48} ILS)`}
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#5d1826] mb-1">
-                  {locale === "ar" ? "العنوان بالتفصيل" : "Detailed Address"}
-                </label>
-                <textarea
-                  required
-                  rows={2}
-                  value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
-                  placeholder={
-                    locale === "ar"
-                      ? "الشارع، الحارة، معالم تفصيلية..."
-                      : "Street, Neighborhood..."
-                  }
-                  className="w-full p-3 bg-[#fbf9f6] border border-[#5d1826]/20 rounded-[3px] text-xs text-[#231916] outline-none focus:border-[#5d1826] resize-none"
-                />
-              </div>
-
-              <div className="p-3 bg-[#fbf9f6] border border-[#5d1826]/10 rounded-[4px] space-y-1 text-xs text-[#5d1826]">
-                <div className="flex justify-between">
-                  <span>
-                    {locale === "ar" ? "مجموع المنتجات:" : "Products Total:"}
-                  </span>
-                  <span>
-                    {totalPrice} {locale === "ar" ? "شيكل" : "ILS"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{locale === "ar" ? "سعر التوصيل:" : "Shipping:"}</span>
-                  <span>
-                    {currentShippingCost} {locale === "ar" ? "شيكل" : "ILS"}
-                  </span>
-                </div>
-                <div className="flex justify-between font-bold pt-1 border-t border-[#5d1826]/10">
-                  <span>{locale === "ar" ? "المجموع الكلي:" : "Total:"}</span>
-                  <span>
-                    {finalTotal} {locale === "ar" ? "شيكل" : "ILS"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-4 border-t border-[#5d1826]/10">
-              <button
-                type="button"
-                onClick={() => setIsCheckoutStep(false)}
-                className="w-1/3 py-3 border border-[#5d1826]/20 text-[#5d1826] rounded-[3px] text-xs font-medium hover:bg-[#5d1826]/5 transition-colors cursor-pointer text-center"
-              >
-                {locale === "ar" ? "الرجوع" : "Back"}
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-2/3 py-3 bg-[#5d1826] text-[#fffcf9] rounded-[3px] text-xs font-medium hover:bg-[#5d1826]/90 transition-colors cursor-pointer text-center flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-                <span>
-                  {locale === "ar" ? "تأكيد وإرسال للواتساب" : "Confirm & Send"}
-                </span>
-              </button>
-            </div>
-          </form>
+            onBack={() => setIsCheckoutStep(false)}
+          />
         )}
       </div>
     </div>

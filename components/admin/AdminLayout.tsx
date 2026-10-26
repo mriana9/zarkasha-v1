@@ -61,11 +61,6 @@ export function AdminLayout({ children, locale, dict }: AdminLayoutProps) {
       icon: MessageSquare,
     },
     {
-      label: dict.nav.customers || (isRtl ? "العملاء" : "Customers"),
-      href: `/${locale}/admin/customers`,
-      icon: Users,
-    },
-    {
       label: dict.nav.settings,
       href: `/${locale}/admin/settings`,
       icon: Settings,

@@ -28,7 +28,6 @@ export default function AdminRootLayout({
       categories: isRtl ? "التصنيفات" : "Categories",
       orders: isRtl ? "الطلبات" : "Orders",
       messages: isRtl ? "الرسائل" : "Messages",
-      customers: isRtl ? "العملاء" : "Customers",
       settings: isRtl ? "الإعدادات" : "Settings",
     },
   };
