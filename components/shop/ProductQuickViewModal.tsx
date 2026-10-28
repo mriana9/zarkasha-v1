@@ -40,8 +40,14 @@ export function ProductQuickViewModal({
   onToggleFavorite,
 }: ProductQuickViewModalProps) {
   const supabase = createClient();
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [phoneNumber, setPhoneNumber] = useState<string>("970592749393");
+
+  const [imageSelection, setImageSelection] = useState({
+    productId: product.id,
+    index: 0,
+  });
+  const activeImageIndex =
+    imageSelection.productId === product.id ? imageSelection.index : 0;
+  const [phoneNumber, setPhoneNumber] = useState("970592749393");
 
   useEffect(() => {
     let isActive = true;
@@ -51,10 +57,11 @@ export function ProductQuickViewModal({
         .from("site_settings")
         .select("value")
         .eq("key", "whatsapp")
-        .single();
+        .maybeSingle();
 
-      if (!error && data && data.value && isActive) {
-        const cleanedNumber = data.value.replace(/\D/g, "");
+      if (!error && data?.value && isActive) {
+        const cleanedNumber = String(data.value).replace(/\D/g, "");
+
         if (cleanedNumber) {
           setPhoneNumber(cleanedNumber);
         }
@@ -73,8 +80,10 @@ export function ProductQuickViewModal({
   if (!isOpen) return null;
 
   const title = locale === "ar" ? product.title_ar : product.title_en;
+
   const description =
     locale === "ar" ? product.description_ar : product.description_en;
+
   const categoryName =
     locale === "ar" ? product.categories?.name_ar : product.categories?.name_en;
 
@@ -82,26 +91,74 @@ export function ProductQuickViewModal({
     product.images && product.images.length > 0
       ? product.images
       : ["/categories/book.png"];
+
   const activeImageSrc = images[activeImageIndex] || images[0];
 
+  const getAbsoluteUrl = (src: string) => {
+    try {
+      return new URL(src, window.location.origin).href;
+    } catch {
+      return src;
+    }
+  };
+
   const handleWhatsAppInquiry = () => {
+    const productUrl = getAbsoluteUrl(`/${locale}/products/${product.id}`);
+
+    const imageUrl = getAbsoluteUrl(activeImageSrc);
+
     const message =
       locale === "ar"
-        ? `مرحباً، أود الاستفسار عن هذا المنتج:\n*${title}*\nالسعر: ${product.price} شيكل`
-        : `Hello, I would like to inquire about this product:\n*${title}*\nPrice: ${product.price} ILS`;
+        ? [
+            "🌸 *مرحباً زركشة!*",
+            "",
+            "أرغب بالاستفسار عن أحد منتجاتكم المميزة:",
+            "",
+            `🪡 *${title}*`,
+            `💰 *السعر:* ${product.price} شيكل`,
+            ...(categoryName ? [`🏷️ *التصنيف:* ${categoryName}`] : []),
+            "",
+            "🖼️ *صورة المنتج:*",
+            imageUrl,
+            "",
+            "هل المنتج متوفر حالياً؟ أود معرفة المزيد من التفاصيل.",
+            "",
+            "شكراً لكم 🤍",
+          ].join("\n")
+        : [
+            "🌸 *Hello Zarkasha!*",
+            "",
+            "I'd like to inquire about one of your beautiful products:",
+            "",
+            `🪡 *${title}*`,
+            `💰 *Price:* ${product.price} ILS`,
+            ...(categoryName ? [`🏷️ *Category:* ${categoryName}`] : []),
+            "",
+            "🔗 *View the product and details:*",
+            productUrl,
+            "",
+            "🖼️ *Product image:*",
+            imageUrl,
+            "",
+            "Is this product currently available? I'd love to know more.",
+            "",
+            "Thank you 🤍",
+          ].join("\n");
 
-    const encodedMessage = encodeURIComponent(message);
-    window.open(
-      `https://wa.me/+97${phoneNumber}?text=${encodedMessage}`,
-      "_blank",
-    );
+    const whatsappUrl = `https://wa.me/+97${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+      onClick={onClose}
+    >
       <div
         className="relative w-full max-w-2xl bg-[#fffcf9] border border-[#5d1826]/20 rounded-[6px] shadow-xl overflow-hidden p-6 md:p-8 font-tajawal max-h-[90vh] overflow-y-auto"
         dir={isRtl ? "rtl" : "ltr"}
+        onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
@@ -119,8 +176,10 @@ export function ProductQuickViewModal({
                 src={activeImageSrc}
                 alt={title}
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
               />
+
               {product.is_featured && (
                 <span className="absolute top-3 start-3 bg-[#7b843d] text-[#fffcf9] text-[10px] font-tajawal font-medium px-2.5 py-1 rounded-[2px] z-10">
                   {locale === "ar" ? "مميز" : "Featured"}
@@ -132,19 +191,28 @@ export function ProductQuickViewModal({
               <div className="flex items-center gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-[#5d1826] [&::-webkit-scrollbar-thumb]:rounded-full">
                 {images.map((img, index) => (
                   <button
-                    key={index}
+                    key={`${img}-${index}`}
                     type="button"
-                    onClick={() => setActiveImageIndex(index)}
+                    onClick={() =>
+                      setImageSelection({ productId: product.id, index })
+                    }
                     className={`relative w-16 h-16 rounded-[3px] overflow-hidden border shrink-0 cursor-pointer transition-all ${
                       activeImageIndex === index
                         ? "border-[#5d1826] ring-2 ring-[#5d1826]/20"
                         : "border-[#5d1826]/20 opacity-70 hover:opacity-100"
                     }`}
+                    aria-label={
+                      locale === "ar"
+                        ? `عرض الصورة ${index + 1}`
+                        : `View image ${index + 1}`
+                    }
+                    aria-pressed={activeImageIndex === index}
                   >
                     <Image
                       src={img}
                       alt={`${title} ${index + 1}`}
                       fill
+                      sizes="64px"
                       className="object-cover"
                     />
                   </button>
@@ -160,12 +228,13 @@ export function ProductQuickViewModal({
                   {categoryName}
                 </span>
               )}
+
               <h2 className="font-amiri text-2xl text-[#5d1826] font-normal leading-snug">
                 {title}
               </h2>
             </div>
 
-            <p className="text-xs text-[#887a75] leading-relaxed">
+            <p className="text-xs text-[#887a75] leading-relaxed whitespace-pre-line">
               {description ||
                 (locale === "ar"
                   ? "لا يوجد وصف متاح حالياً."
@@ -176,6 +245,7 @@ export function ProductQuickViewModal({
               <span className="text-sm font-semibold text-[#5d1826]">
                 {product.price} {locale === "ar" ? "شيكل" : "ILS"}
               </span>
+
               <span className="text-xs text-[#887a75]">
                 {locale === "ar"
                   ? `المتوفر: ${product.stock}`
@@ -188,11 +258,19 @@ export function ProductQuickViewModal({
                 <button
                   type="button"
                   onClick={onAddToCart}
-                  className="flex-1 py-3 bg-[#5d1826] text-[#fffcf9] rounded-[3px] text-xs font-medium flex items-center justify-center gap-2 hover:bg-[#5d1826]/90 transition-colors cursor-pointer shadow-sm"
+                  disabled={product.stock <= 0}
+                  className="flex-1 py-3 bg-[#5d1826] text-[#fffcf9] rounded-[3px] text-xs font-medium flex items-center justify-center gap-2 hover:bg-[#5d1826]/90 transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ShoppingBag className="w-4 h-4" />
+
                   <span>
-                    {locale === "ar" ? "أضيفي إلى السلة" : "Add to Bag"}
+                    {product.stock <= 0
+                      ? locale === "ar"
+                        ? "غير متوفر"
+                        : "Out of Stock"
+                      : locale === "ar"
+                        ? "أضيفي إلى السلة"
+                        : "Add to Bag"}
                   </span>
                 </button>
 
@@ -214,6 +292,7 @@ export function ProductQuickViewModal({
                 className="w-full py-2.5 bg-[#25D366] text-white rounded-[3px] text-xs font-medium flex items-center justify-center gap-2 hover:bg-[#20ba5a] transition-colors cursor-pointer"
               >
                 <MessageCircle className="w-4 h-4" />
+
                 <span>
                   {locale === "ar"
                     ? "استفسري عن المنتج عبر الواتساب"

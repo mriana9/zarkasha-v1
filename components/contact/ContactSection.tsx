@@ -185,10 +185,10 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
   const cleanWhatsapp = contactSettings.whatsapp.replace(/\D/g, "");
   const whatsappHref = cleanWhatsapp
     ? `https://wa.me/+97${cleanWhatsapp}`
-    : "https://wa.me/";
+    : "https://wa.me/+970592749303";
   const instagramHref = contactSettings.instagram
     ? `https://instagram.com/${contactSettings.instagram.replace("@", "")}`
-    : "https://instagram.com";
+    : "https://instagram.com/zarkasha.303";
   const emailHref = contactSettings.email
     ? `mailto:${contactSettings.email}`
     : "#";
