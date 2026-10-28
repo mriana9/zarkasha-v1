@@ -139,16 +139,35 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
     emailSub: "للاستفسارات والتعاون",
   };
 
+  // دالة بسيطة لتنظيف النصوص ومنع حقن الأكواد الخبيثة
+  const sanitizeInput = (text: string) => {
+    return text.replace(/<[^>]*>?/gm, "").trim();
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // فالتشن رقم الهاتف (إذا تم إدخاله، يجب أن يكون 10 أرقام تماماً)
+    if (formData.phone.trim() !== "") {
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(formData.phone.trim())) {
+        toast.error(
+          locale === "ar"
+            ? "رقم الهاتف يجب أن يتكون من 10 أرقام فقط"
+            : "Phone number must be exactly 10 digits",
+        );
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     const { error } = await supabase.from("contact_messages").insert({
-      full_name: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      subject: formData.subject,
-      message: formData.message,
+      full_name: sanitizeInput(formData.fullName),
+      email: formData.email ? sanitizeInput(formData.email) : null,
+      phone: formData.phone ? sanitizeInput(formData.phone) : null,
+      subject: sanitizeInput(formData.subject),
+      message: sanitizeInput(formData.message),
     });
 
     if (error) {
@@ -284,6 +303,7 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                 <input
                   type="text"
                   required
+                  maxLength={100}
                   value={formData.fullName}
                   onChange={(e) =>
                     setFormData({ ...formData, fullName: e.target.value })
@@ -300,7 +320,7 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                   </label>
                   <input
                     type="email"
-                    required
+                    maxLength={100}
                     value={formData.email}
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
@@ -315,10 +335,15 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                   </label>
                   <input
                     type="tel"
+                    maxLength={10}
                     value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
+                    onChange={(e) => {
+                      // السماح فقط بالأرقام ومنع الحروف والرموز نهائياً
+                      const numericValue = e.target.value.replace(/\D/g, "");
+                      if (numericValue.length <= 10) {
+                        setFormData({ ...formData, phone: numericValue });
+                      }
+                    }}
                     placeholder={form.phonePlaceholder}
                     className="w-full h-12 px-4 bg-white/10 border border-white/20 rounded-[2px] text-ivory placeholder:text-white/40 font-tajawal text-sm outline-none focus:border-blush transition-colors"
                   />
@@ -355,6 +380,7 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                 <textarea
                   required
                   rows={4}
+                  maxLength={1000}
                   value={formData.message}
                   onChange={(e) =>
                     setFormData({ ...formData, message: e.target.value })
