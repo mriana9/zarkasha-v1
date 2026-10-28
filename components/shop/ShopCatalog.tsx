@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, Sparkles, Loader2, ArrowUpDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ProductCard } from "./ProductCard";
@@ -45,12 +46,27 @@ type SortOption = "default" | "price-asc" | "price-desc";
 
 export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
   const supabase = createClient();
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
   const isRtl = locale === "ar";
 
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [categorySelection, setCategorySelection] = useState({
+    param: categoryParam,
+    value: categoryParam || "all",
+  });
+  if (categorySelection.param !== categoryParam) {
+    setCategorySelection({
+      param: categoryParam,
+      value: categoryParam || "all",
+    });
+  }
+  const activeCategory = categorySelection.value;
+  const setActiveCategory = (value: string) => {
+    setCategorySelection({ param: categoryParam, value });
+  };
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<SortOption>("default");
 

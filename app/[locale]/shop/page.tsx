@@ -23,7 +23,6 @@ async function ShopContent({ params }: ShopPageProps) {
         locale={locale}
       />
       <ShopHero dict={dict.Shop} locale={locale} />
-      {/* تمرير dict و locale معاً للكتالوج */}
       <ShopCatalog dict={dict.Shop} locale={locale} />
       <ShopServiceStrip dict={dict.Shop.serviceStrip} />
       <Footer dict={dict.Footer} locale={locale} />

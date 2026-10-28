@@ -18,7 +18,7 @@ export async function CategorySection({ dict, locale }: CategorySectionProps) {
     .from("categories")
     .select("*")
     .eq("is_visible", true)
-    .order("created_at", { ascending: true }); 
+    .order("created_at", { ascending: true });
 
   if (error || !categories) {
     return null;
