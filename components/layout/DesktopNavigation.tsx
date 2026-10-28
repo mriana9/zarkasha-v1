@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface DesktopNavigationProps {
   locale: string;
@@ -11,6 +14,8 @@ interface DesktopNavigationProps {
 }
 
 export function DesktopNavigation({ locale, dict }: DesktopNavigationProps) {
+  const pathname = usePathname();
+
   const links = [
     { name: dict.home, href: `/${locale}` },
     { name: dict.shop, href: `/${locale}/shop` },
@@ -20,16 +25,29 @@ export function DesktopNavigation({ locale, dict }: DesktopNavigationProps) {
 
   return (
     <nav className="hidden lg:flex items-center gap-7 font-tajawal text-[14px] text-[#231916]">
-      {links.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className="relative hover:text-burgundy transition-colors group py-1"
-        >
-          {link.name}
-          <span className="absolute bottom-0 start-0 w-0 h-[1px] bg-burgundy transition-all duration-300 group-hover:w-full" />
-        </Link>
-      ))}
+      {links.map((link) => {
+        const isActive =
+          link.href === `/${locale}`
+            ? pathname === `/${locale}`
+            : pathname.startsWith(link.href);
+
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`relative transition-colors group py-1 ${
+              isActive ? "text-burgundy font-medium" : "hover:text-burgundy"
+            }`}
+          >
+            {link.name}
+            <span
+              className={`absolute bottom-0 start-0 h-[1px] bg-burgundy transition-all duration-300 ${
+                isActive ? "w-full" : "w-0 group-hover:w-full"
+              }`}
+            />
+          </Link>
+        );
+      })}
     </nav>
   );
 }
