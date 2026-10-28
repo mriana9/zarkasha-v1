@@ -14,6 +14,7 @@ import { ContactSection } from "@/components/home/contact/ContactSection";
 import { FaqSection } from "@/components/home/faq/FaqSection";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
+import { ProductsSection } from "@/components/home/product/ProductsSection";
 
 interface PageProps {
   params: Promise<{ locale: "ar" | "en" }>;
@@ -36,6 +37,7 @@ async function HomeContent({ params }: PageProps) {
       <MarqueeSection items={dict.Marquee} />
       <CategorySection dict={dict.Categories} locale={locale} />
       <CatalogSection dict={dict.Catalog} locale={locale} />
+      <ProductsSection locale={locale} dict={dict.Products} />
       <StorySection dict={dict.Story} locale={locale} />
       <CustomSection dict={dict.Custom} locale={locale} />
       <ValuesSection dict={dict.Values} />

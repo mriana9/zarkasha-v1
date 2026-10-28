@@ -341,5 +341,10 @@
     "uploadHint": "Drag & drop images here or click to upload",
     "submit": "Save Product",
     "saving": "Saving..."
+  },
+  "Products": {
+    "title": "Handpicked Featured Pieces",
+    "subtitle": "Embroidered Creations",
+    "viewAllBtn": "View All in Shop"
   }
 }
