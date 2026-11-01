@@ -1,6 +1,7 @@
+
 "use client";
 
-import { X, ShoppingBag, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
+import { X, ShoppingBag, Trash2, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
@@ -46,6 +47,7 @@ export function CartDrawer({
   const [isVisible, setIsVisible] = useState(isOpen);
   const [isCheckoutStep, setIsCheckoutStep] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: string]: boolean }>({});
 
   const [shippingRates, setShippingRates] = useState<ShippingRates>({
     westBank: 20,
@@ -410,19 +412,31 @@ export function CartDrawer({
               ) : (
                 cart.map((item) => {
                   const title = locale === "ar" ? item.title_ar : item.title_en;
+                  const isImageLoading = imageLoadingStates[item.id] ?? true;
 
                   return (
                     <div
                       key={item.id}
                       className="flex gap-4 p-3 bg-[#fbf9f6] border border-[#5d1826]/10 rounded-[4px] items-center transition-all duration-200 hover:border-[#5d1826]/30"
                     >
-                      <div className="relative w-16 h-16 rounded-[3px] overflow-hidden shrink-0 border border-[#5d1826]/10">
+                      <div className="relative w-16 h-16 rounded-[3px] overflow-hidden shrink-0 border border-[#5d1826]/10 bg-[#fbf9f6]">
+                        {isImageLoading && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-[#fbf9f6] z-10">
+                            <Loader2 className="w-4 h-4 text-[#5d1826] animate-spin" />
+                          </div>
+                        )}
                         <Image
                           src={item.image}
                           alt={title}
                           fill
+                          loading="lazy"
                           sizes="64px"
-                          className="object-cover"
+                          onLoad={() =>
+                            setImageLoadingStates((prev) => ({ ...prev, [item.id]: false }))
+                          }
+                          className={`object-cover transition-all duration-500 ease-in-out ${
+                            isImageLoading ? "opacity-0 scale-95" : "opacity-100 scale-100"
+                          }`}
                         />
                       </div>
 
