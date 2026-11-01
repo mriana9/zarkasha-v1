@@ -2,22 +2,21 @@ import type { NextConfig } from "next";
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline';
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.clarity.ms https://*.clarity.ms;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: https:;
+    img-src 'self' blob: data: https: https://*.clarity.ms;
     font-src 'self' data:;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self' https:;
+    connect-src 'self' https: https://*.clarity.ms https://*.bing.com;
     upgrade-insecure-requests;
 `
   .replace(/\s{2,}/g, " ")
   .trim();
 
 const nextConfig: NextConfig = {
-  /* config options here */
   images: {
     remotePatterns: [
       {
