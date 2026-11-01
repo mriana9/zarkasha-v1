@@ -27,8 +27,8 @@ async function StoryContent({ params }: StoryPageProps) {
         locale={locale}
       />
       <StoryHero dict={dict.StoryPage} locale={locale} />
-      <ProductsSection locale={locale} dict={dict.Products} />
       <StoryManifesto dict={dict.StoryPage} />
+      <ProductsSection locale={locale} dict={dict.Products} />
       <StoryOrigin dict={dict.StoryPage} />
       <StoryChapters dict={dict.StoryPage} />
       <StoryCraft dict={dict.StoryPage} />
