@@ -1,7 +1,6 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
 
 interface FooterProps {
   dict: {
@@ -11,19 +10,15 @@ interface FooterProps {
         title: string;
         store: string;
         story: string;
-        brandKit: string;
-        customOrders: string;
       };
       help: {
         title: string;
         shipping: string;
-        returns: string;
         faq: string;
       };
       social: {
         title: string;
         instagram: string;
-        facebook: string;
         whatsapp: string;
       };
     };
@@ -33,8 +28,26 @@ interface FooterProps {
   locale: string;
 }
 
-export function Footer({ dict, locale }: FooterProps) {
-  const currentYear = new Date().getFullYear();
+export async function Footer({ dict, locale }: FooterProps) {
+  const currentYear = 2026;
+  const supabase = await createClient();
+
+  const { data: settings } = await supabase
+    .from("site_settings")
+    .select("key, value")
+    .in("key", ["whatsapp", "instagram"]);
+
+  const whatsappValue =
+    settings?.find((s) => s.key === "whatsapp")?.value || "";
+  const instagramValue =
+    settings?.find((s) => s.key === "instagram")?.value || "";
+
+  const instagramUrl = instagramValue
+    ? `https://instagram.com/${instagramValue.replace(/^@/, "")}`
+    : "https://instagram.com";
+  const whatsappUrl = whatsappValue
+    ? `https://wa.me/+97${whatsappValue.replace(/\D/g, "")}`
+    : "https://whatsapp.com";
 
   return (
     <footer className="pt-[70px] pb-[25px] px-[6vw] text-ivory bg-brown font-tajawal">
@@ -74,18 +87,6 @@ export function Footer({ dict, locale }: FooterProps) {
             >
               {dict.columns.explore.story}
             </Link>
-            <Link
-              href={`/${locale}#brand-kit`}
-              className="block my-[12px] text-ivory/65 text-[13px] hover:text-white transition-colors"
-            >
-              {dict.columns.explore.brandKit}
-            </Link>
-            <Link
-              href={`/${locale}#contact`}
-              className="block my-[12px] text-ivory/65 text-[13px] hover:text-white transition-colors"
-            >
-              {dict.columns.explore.customOrders}
-            </Link>
           </div>
 
           <div>
@@ -97,12 +98,6 @@ export function Footer({ dict, locale }: FooterProps) {
               className="block my-[12px] text-ivory/65 text-[13px] hover:text-white transition-colors"
             >
               {dict.columns.help.shipping}
-            </Link>
-            <Link
-              href={`/${locale}#contact`}
-              className="block my-[12px] text-ivory/65 text-[13px] hover:text-white transition-colors"
-            >
-              {dict.columns.help.returns}
             </Link>
             <Link
               href={`/${locale}#faq`}
@@ -117,7 +112,7 @@ export function Footer({ dict, locale }: FooterProps) {
               {dict.columns.social.title}
             </h3>
             <a
-              href="https://instagram.com"
+              href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="block my-[12px] text-ivory/65 text-[13px] hover:text-white transition-colors"
@@ -125,15 +120,7 @@ export function Footer({ dict, locale }: FooterProps) {
               {dict.columns.social.instagram}
             </a>
             <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block my-[12px] text-ivory/65 text-[13px] hover:text-white transition-colors"
-            >
-              {dict.columns.social.facebook}
-            </a>
-            <a
-              href="https://whatsapp.com"
+              href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="block my-[12px] text-ivory/65 text-[13px] hover:text-white transition-colors"

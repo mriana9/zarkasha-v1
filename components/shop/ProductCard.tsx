@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ShoppingBag, ArrowRight, ArrowLeft } from "lucide-react";
+import { ShoppingBag, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { ProductQuickViewModal } from "./ProductQuickViewModal";
 import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: {
@@ -35,6 +36,8 @@ export function ProductCard({
   onToggleFavorite,
 }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoadingImage, setIsLoadingImage] = useState(true);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addToCart } = useCart();
 
   const title = locale === "ar" ? product.title_ar : product.title_en;
@@ -42,15 +45,39 @@ export function ProductCard({
     locale === "ar" ? product.categories?.name_ar : product.categories?.name_en;
   const imageSrc = product.images?.[0] || "/categories/book.png";
 
+  const handleAddToCart = async () => {
+    try {
+      setIsAddingToCart(true);
+      await Promise.resolve(addToCart(product));
+      toast.success(
+        locale === "ar"
+          ? "تمت إضافة المنتج إلى السلة بنجاح"
+          : "Product added to bag successfully",
+      );
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   return (
     <>
       <article className="flex flex-col justify-between group">
         <div className="relative aspect-square w-full overflow-hidden bg-[#fbf9f6] border border-[#5d1826]/10 mb-4">
+          {isLoadingImage && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#fbf9f6] z-10">
+              <Loader2 className="w-6 h-6 text-[#5d1826] animate-spin" />
+            </div>
+          )}
+
           <Image
             src={imageSrc}
             alt={title}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+            onLoad={() => setIsLoadingImage(false)}
+            className={`object-cover transition-all duration-700 ease-in-out group-hover:scale-105 ${
+              isLoadingImage ? "opacity-0 scale-95" : "opacity-100 scale-100"
+            }`}
           />
 
           {product.is_featured && (
@@ -59,26 +86,26 @@ export function ProductCard({
             </span>
           )}
 
-          {/* <button
-            type="button"
-            onClick={onToggleFavorite}
-            aria-label={
-              locale === "ar"
-                ? `إضافة ${title} إلى المفضلة`
-                : `Add ${title} to favorites`
-            }
-            className="absolute top-3 end-3 w-9 h-9 rounded-full bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#5d1826] transition-all duration-300 opacity-0 group-hover:opacity-100 hover:bg-white cursor-pointer shadow-xs z-10"
-          >
-            <Heart className="w-[18px] h-[18px]" />
-          </button> */}
-
           <button
             type="button"
-            onClick={() => addToCart(product)}
-            className="absolute inset-x-0 bottom-0 py-3 bg-[#5d1826]/90 backdrop-blur-xs text-[#fffcf9] text-xs font-tajawal font-medium flex items-center justify-center gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 cursor-pointer hover:bg-[#5d1826] z-10"
+            onClick={handleAddToCart}
+            disabled={isAddingToCart}
+            className="absolute inset-x-0 bottom-0 py-3 bg-[#5d1826]/90 backdrop-blur-xs text-[#fffcf9] text-xs font-tajawal font-medium flex items-center justify-center gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 cursor-pointer hover:bg-[#5d1826] z-10 disabled:cursor-not-allowed"
           >
-            <ShoppingBag className="w-[17px] h-[17px]" />
-            <span>{locale === "ar" ? "أضيفي إلى السلة" : "Add to Bag"}</span>
+            {isAddingToCart ? (
+              <Loader2 className="w-[17px] h-[17px] animate-spin" />
+            ) : (
+              <ShoppingBag className="w-[17px] h-[17px]" />
+            )}
+            <span>
+              {isAddingToCart
+                ? locale === "ar"
+                  ? "جاري الإضافة..."
+                  : "Adding..."
+                : locale === "ar"
+                  ? "أضيفي إلى السلة"
+                  : "Add to Bag"}
+            </span>
           </button>
         </div>
 
@@ -127,7 +154,7 @@ export function ProductCard({
         isRtl={isRtl}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAddToCart={() => addToCart(product)}
+        onAddToCart={handleAddToCart}
         onToggleFavorite={onToggleFavorite}
       />
     </>
