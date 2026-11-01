@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, Heart, ShoppingBag, MessageCircle } from "lucide-react";
+import { X, Heart, ShoppingBag, MessageCircle, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface ProductQuickViewModalProps {
@@ -48,6 +48,10 @@ export function ProductQuickViewModal({
   const activeImageIndex =
     imageSelection.productId === product.id ? imageSelection.index : 0;
   const [phoneNumber, setPhoneNumber] = useState("970592749393");
+  const [isMainImageLoading, setIsMainImageLoading] = useState(true);
+  const [thumbnailLoadingStates, setThumbnailLoadingStates] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   useEffect(() => {
     let isActive = true;
@@ -172,12 +176,25 @@ export function ProductQuickViewModal({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           <div className="space-y-3">
             <div className="relative aspect-square w-full rounded-[4px] overflow-hidden bg-[#fbf9f6] border border-[#5d1826]/10">
+              {isMainImageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#fbf9f6] z-10">
+                  <Loader2 className="w-6 h-6 text-[#5d1826] animate-spin" />
+                </div>
+              )}
+
               <Image
                 src={activeImageSrc}
                 alt={title}
                 fill
+                loading="lazy"
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
+                onLoad={() => setIsMainImageLoading(false)}
+                key={activeImageSrc}
+                className={`object-cover transition-all duration-700 ease-in-out ${
+                  isMainImageLoading
+                    ? "opacity-0 scale-95"
+                    : "opacity-100 scale-100"
+                }`}
               />
 
               {product.is_featured && (
@@ -189,34 +206,54 @@ export function ProductQuickViewModal({
 
             {images.length > 1 && (
               <div className="flex items-center gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-[#5d1826] [&::-webkit-scrollbar-thumb]:rounded-full">
-                {images.map((img, index) => (
-                  <button
-                    key={`${img}-${index}`}
-                    type="button"
-                    onClick={() =>
-                      setImageSelection({ productId: product.id, index })
-                    }
-                    className={`relative w-16 h-16 rounded-[3px] overflow-hidden border shrink-0 cursor-pointer transition-all ${
-                      activeImageIndex === index
-                        ? "border-[#5d1826] ring-2 ring-[#5d1826]/20"
-                        : "border-[#5d1826]/20 opacity-70 hover:opacity-100"
-                    }`}
-                    aria-label={
-                      locale === "ar"
-                        ? `عرض الصورة ${index + 1}`
-                        : `View image ${index + 1}`
-                    }
-                    aria-pressed={activeImageIndex === index}
-                  >
-                    <Image
-                      src={img}
-                      alt={`${title} ${index + 1}`}
-                      fill
-                      sizes="64px"
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
+                {images.map((img, index) => {
+                  const isThumbLoading = thumbnailLoadingStates[img] ?? true;
+                  return (
+                    <button
+                      key={`${img}-${index}`}
+                      type="button"
+                      onClick={() => {
+                        setIsMainImageLoading(true);
+                        setImageSelection({ productId: product.id, index });
+                      }}
+                      className={`relative w-16 h-16 rounded-[3px] overflow-hidden border shrink-0 cursor-pointer transition-all bg-[#fbf9f6] ${
+                        activeImageIndex === index
+                          ? "border-[#5d1826] ring-2 ring-[#5d1826]/20"
+                          : "border-[#5d1826]/20 opacity-70 hover:opacity-100"
+                      }`}
+                      aria-label={
+                        locale === "ar"
+                          ? `عرض الصورة ${index + 1}`
+                          : `View image ${index + 1}`
+                      }
+                      aria-pressed={activeImageIndex === index}
+                    >
+                      {isThumbLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-[#fbf9f6] z-10">
+                          <Loader2 className="w-4 h-4 text-[#5d1826] animate-spin" />
+                        </div>
+                      )}
+                      <Image
+                        src={img}
+                        alt={`${title} ${index + 1}`}
+                        fill
+                        loading="lazy"
+                        sizes="64px"
+                        onLoad={() =>
+                          setThumbnailLoadingStates((prev) => ({
+                            ...prev,
+                            [img]: false,
+                          }))
+                        }
+                        className={`object-cover transition-all duration-500 ease-in-out ${
+                          isThumbLoading
+                            ? "opacity-0 scale-95"
+                            : "opacity-100 scale-100"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -8,6 +8,7 @@ import { StoryOrigin } from "@/components/story/StoryOrigin";
 import { StoryChapters } from "@/components/story/StoryChapters";
 import { StoryCraft } from "@/components/story/StoryCraft";
 import { StoryClosing } from "@/components/story/StoryClosing";
+import { ProductsSection } from "@/components/home/product/ProductsSection";
 
 interface StoryPageProps {
   params: Promise<{ locale: "ar" | "en" }>;
@@ -26,6 +27,7 @@ async function StoryContent({ params }: StoryPageProps) {
         locale={locale}
       />
       <StoryHero dict={dict.StoryPage} locale={locale} />
+      <ProductsSection locale={locale} dict={dict.Products} />
       <StoryManifesto dict={dict.StoryPage} />
       <StoryOrigin dict={dict.StoryPage} />
       <StoryChapters dict={dict.StoryPage} />
