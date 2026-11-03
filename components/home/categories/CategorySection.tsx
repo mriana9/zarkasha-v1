@@ -14,13 +14,14 @@ interface CategorySectionProps {
 
 export async function CategorySection({ dict, locale }: CategorySectionProps) {
   const supabase = await createClient();
+  
   const { data: categories, error } = await supabase
     .from("categories")
     .select("*")
-    .eq("is_visible", true)
+    .or("is_visible.eq.true,is_visible.is.null")
     .order("created_at", { ascending: true });
 
-  if (error || !categories) {
+  if (error || !categories || categories.length === 0) {
     return null;
   }
 

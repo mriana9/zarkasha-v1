@@ -55,7 +55,6 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
   const [contactSettings, setContactSettings] = useState({
     whatsapp: "",
     instagram: "",
-    email: "",
   });
 
   const [formData, setFormData] = useState({
@@ -71,23 +70,20 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
       const { data, error } = await supabase
         .from("site_settings")
         .select("key, value")
-        .in("key", ["whatsapp", "instagram", "admin_email"]);
+        .in("key", ["whatsapp", "instagram"]);
 
       if (!error && data) {
         const settingsMap: {
           whatsapp: string;
           instagram: string;
-          email: string;
         } = {
           whatsapp: "",
           instagram: "",
-          email: "",
         };
 
         data.forEach((item) => {
           if (item.key === "whatsapp") settingsMap.whatsapp = item.value;
           if (item.key === "instagram") settingsMap.instagram = item.value;
-          if (item.key === "email") settingsMap.email = item.value;
         });
 
         setContactSettings(settingsMap);
@@ -139,7 +135,6 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
     emailSub: "للاستفسارات والتعاون",
   };
 
-  // دالة بسيطة لتنظيف النصوص ومنع حقن الأكواد الخبيثة
   const sanitizeInput = (text: string) => {
     return text.replace(/<[^>]*>?/gm, "").trim();
   };
@@ -147,7 +142,6 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // فالتشن رقم الهاتف (إذا تم إدخاله، يجب أن يكون 10 أرقام تماماً)
     if (formData.phone.trim() !== "") {
       const phoneRegex = /^\d{10}$/;
       if (!phoneRegex.test(formData.phone.trim())) {
@@ -189,9 +183,6 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
   const instagramHref = contactSettings.instagram
     ? `https://instagram.com/${contactSettings.instagram.replace("@", "")}`
     : "https://instagram.com/zarkasha.303";
-  const emailHref = contactSettings.email
-    ? `mailto:${contactSettings.email}`
-    : "#";
 
   return (
     <section className="bg-ivory py-[80px] px-[6vw]">
@@ -260,11 +251,8 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
             </div>
           </a>
 
-          <a
-            href={emailHref}
-            className="p-6 bg-beige/40 border border-burgundy/12 rounded-[4px] flex items-start gap-5 group hover:border-burgundy/35 transition-all block"
-          >
-            <div className="w-12 h-12 rounded-full bg-blush text-burgundy grid place-items-center shrink-0 group-hover:scale-105 transition-transform">
+          <div className="p-6 bg-beige/40 border border-burgundy/12 rounded-[4px] flex items-start gap-5">
+            <div className="w-12 h-12 rounded-full bg-blush text-burgundy grid place-items-center shrink-0">
               <Mail className="w-5 h-5" />
             </div>
             <div>
@@ -272,10 +260,10 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                 {info.emailTitle}
               </h3>
               <p className="m-0 text-[#887a75] text-xs font-tajawal leading-relaxed">
-                {contactSettings.email || info.emailSub}
+                {info.emailSub}
               </p>
             </div>
-          </a>
+          </div>
         </div>
 
         <div className="p-8 sm:p-10 bg-burgundy text-ivory rounded-[4px] shadow-sm">
@@ -338,7 +326,6 @@ export function ContactSection({ dict, locale }: ContactSectionProps) {
                     maxLength={10}
                     value={formData.phone}
                     onChange={(e) => {
-                      // السماح فقط بالأرقام ومنع الحروف والرموز نهائياً
                       const numericValue = e.target.value.replace(/\D/g, "");
                       if (numericValue.length <= 10) {
                         setFormData({ ...formData, phone: numericValue });

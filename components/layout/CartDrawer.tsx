@@ -1,13 +1,20 @@
-
 "use client";
 
-import { X, ShoppingBag, Trash2, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import {
+  X,
+  ShoppingBag,
+  Trash2,
+  ArrowLeft,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { CheckoutForm } from "../shop/CheckoutForm";
+import { createOrder } from "@/app/actions/createOrder";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -34,6 +41,21 @@ interface CheckoutFormData {
   whatsappOptIn: boolean;
 }
 
+const orderErrorMessages: Record<string, { ar: string; en: string }> = {
+  EMPTY_CART: { ar: "سلة التسوق فارغة", en: "Your cart is empty" },
+  INVALID_PHONE: { ar: "رقم الهاتف غير صالح", en: "Invalid phone number" },
+  MISSING_FIELDS: { ar: "يرجى ملء جميع الحقول", en: "Please fill all fields" },
+  INVALID_SHIPPING: { ar: "خطأ في رسوم التوصيل", en: "Invalid shipping fees" },
+  PRODUCTS_NOT_FOUND: {
+    ar: "بعض المنتجات غير متوفرة",
+    en: "Some products unavailable",
+  },
+  INVALID_QUANTITY: { ar: "كمية غير صالحة", en: "Invalid quantity" },
+  INVALID_TOTAL: { ar: "المبلغ غير صالح", en: "Invalid total" },
+  INSERT_FAILED: { ar: "تعذّر حفظ الطلب", en: "Could not save order" },
+  UNEXPECTED: { ar: "حدث خطأ غير متوقع", en: "Unexpected error" },
+};
+
 export function CartDrawer({
   isOpen,
   onClose,
@@ -47,7 +69,9 @@ export function CartDrawer({
   const [isVisible, setIsVisible] = useState(isOpen);
   const [isCheckoutStep, setIsCheckoutStep] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: string]: boolean }>({});
+  const [imageLoadingStates, setImageLoadingStates] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const [shippingRates, setShippingRates] = useState<ShippingRates>({
     westBank: 20,
@@ -121,7 +145,7 @@ export function CartDrawer({
   }, [isOpen, supabase]);
 
   const currentShippingCost = shippingRates[selectedRegion];
-  const finalTotal = totalPrice + (cart.length > 0 ? currentShippingCost : 0);
+  const displayTotal = totalPrice + (cart.length > 0 ? currentShippingCost : 0);
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,49 +207,33 @@ export function CartDrawer({
 
       const regionName = locale === "ar" ? regionNameAr : regionNameEn;
 
-      const shippingAddress = {
-        full_name: formData.fullName.trim(),
-        phone: formData.phone.trim(),
-        address: formData.address.trim(),
-        notes: formData.notes.trim(),
+      const result = await createOrder({
+        items: cart.map((item) => ({ id: item.id, quantity: item.quantity })),
+        fullName: formData.fullName,
+        phone: formData.phone,
+        address: formData.address,
         region: regionName,
-        shipping_cost: currentShippingCost,
-        items: cart.map((item) => ({
-          id: item.id,
-          title: locale === "ar" ? item.title_ar : item.title_en,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image,
-        })),
-      };
+        notes: formData.notes,
+        shippingCost: currentShippingCost,
+        locale,
+      });
 
-      const { data: orderData, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          total_amount: finalTotal,
-          shipping_address: shippingAddress,
-          payment_method: "cash_on_delivery",
-          status: "pending",
-        })
-        .select("order_number")
-        .single();
-
-      if (orderError) {
-        console.error("Order insertion error:", orderError);
-
+      if (!result.success) {
         if (whatsappWindow && !whatsappWindow.closed) {
           whatsappWindow.close();
         }
 
-        toast.error(
-          locale === "ar"
-            ? "حدث خطأ أثناء حفظ الطلب. يرجى المحاولة مرة أخرى."
-            : "Could not save the order. Please try again.",
-        );
+        const msg =
+          orderErrorMessages[result.error ?? "UNEXPECTED"] ??
+          orderErrorMessages.UNEXPECTED;
+
+        toast.error(locale === "ar" ? msg.ar : msg.en);
         return;
       }
 
-      const orderNumber = orderData?.order_number ?? "";
+      const orderNumber = result.orderNumber ?? "";
+      const trustedTotal = result.totalAmount ?? 0;
+      const trustedItemsTotal = trustedTotal - currentShippingCost;
 
       let whatsappNumber = "970592749393";
 
@@ -286,9 +294,9 @@ export function CartDrawer({
               ...productMessages,
               "",
               "━━━━━━━━━━━━━━━",
-              `🛒 *مجموع المنتجات:* ${totalPrice} شيكل`,
+              `🛒 *مجموع المنتجات:* ${trustedItemsTotal} شيكل`,
               `🚚 *رسوم التوصيل:* ${currentShippingCost} شيكل`,
-              `💰 *المجموع النهائي:* ${finalTotal} شيكل`,
+              `💰 *المجموع النهائي:* ${trustedTotal} شيكل`,
               "",
               "💳 *طريقة الدفع:* الدفع عند الاستلام",
             ].join("\n")
@@ -307,9 +315,9 @@ export function CartDrawer({
               ...productMessages,
               "",
               "━━━━━━━━━━━━━━━",
-              `🛒 *Products total:* ${totalPrice} ILS`,
+              `🛒 *Products total:* ${trustedItemsTotal} ILS`,
               `🚚 *Shipping:* ${currentShippingCost} ILS`,
-              `💰 *Grand total:* ${finalTotal} ILS`,
+              `💰 *Grand total:* ${trustedTotal} ILS`,
               "",
               "💳 *Payment method:* Cash on delivery",
             ].join("\n");
@@ -432,10 +440,15 @@ export function CartDrawer({
                           loading="lazy"
                           sizes="64px"
                           onLoad={() =>
-                            setImageLoadingStates((prev) => ({ ...prev, [item.id]: false }))
+                            setImageLoadingStates((prev) => ({
+                              ...prev,
+                              [item.id]: false,
+                            }))
                           }
                           className={`object-cover transition-all duration-500 ease-in-out ${
-                            isImageLoading ? "opacity-0 scale-95" : "opacity-100 scale-100"
+                            isImageLoading
+                              ? "opacity-0 scale-95"
+                              : "opacity-100 scale-100"
                           }`}
                         />
                       </div>
@@ -531,7 +544,7 @@ export function CartDrawer({
                       {locale === "ar" ? "المجموع النهائي:" : "Grand total:"}
                     </span>
                     <span>
-                      {finalTotal} {locale === "ar" ? "شيكل" : "ILS"}
+                      {displayTotal} {locale === "ar" ? "شيكل" : "ILS"}
                     </span>
                   </div>
                 </div>
@@ -561,7 +574,7 @@ export function CartDrawer({
             shippingRates={shippingRates}
             totalPrice={totalPrice}
             currentShippingCost={currentShippingCost}
-            finalTotal={finalTotal}
+            finalTotal={displayTotal}
             loading={loading}
             onSubmit={handleCheckoutSubmit}
             onBack={() => setIsCheckoutStep(false)}

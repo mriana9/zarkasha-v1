@@ -47,10 +47,12 @@ export default function AdminEditProductPage({ params }: EditProductPageProps) {
     descriptionEn: "",
     price: "",
     stock: "0",
-    isFeatured: false,
+    embroideryType: "",
+    fabricType: "",
+    color: "",
+    size: "",
   });
 
-  // إدارة الصور القديمة والجديدة بشكل منفصل لضمان الموثوقية
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
@@ -120,7 +122,10 @@ export default function AdminEditProductPage({ params }: EditProductPageProps) {
           descriptionEn: item.description_en || "",
           price: String(item.price || ""),
           stock: String(item.stock || 0),
-          isFeatured: item.is_featured ?? false,
+          embroideryType: item.embroidery_type || "",
+          fabricType: item.fabric_type || "",
+          color: item.color || "",
+          size: item.size || "",
         });
         setExistingImages(item.images || []);
       }
@@ -172,7 +177,6 @@ export default function AdminEditProductPage({ params }: EditProductPageProps) {
     try {
       const uploadedImageUrls: string[] = [];
 
-      // رفع الصور الجديدة إن وجدت
       for (const file of newImageFiles) {
         const fileExt = file.name.split(".").pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
@@ -200,7 +204,6 @@ export default function AdminEditProductPage({ params }: EditProductPageProps) {
         uploadedImageUrls.push(publicUrlData.publicUrl);
       }
 
-      // دمج الصور القديمة المتبقية مع الصور الجديدة المرفوعة
       const finalImages = [...existingImages, ...uploadedImageUrls];
 
       const { error } = await supabase
@@ -214,8 +217,11 @@ export default function AdminEditProductPage({ params }: EditProductPageProps) {
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock) || 0,
           images: finalImages,
-          is_featured: formData.isFeatured,
           updated_at: new Date().toISOString(),
+          embroidery_type: formData.embroideryType || null,
+          fabric_type: formData.fabricType || null,
+          color: formData.color || null,
+          size: formData.size || null,
         })
         .eq("id", productId);
 
@@ -371,6 +377,74 @@ export default function AdminEditProductPage({ params }: EditProductPageProps) {
 
         <div className="bg-[#fbf9f6] border border-burgundy/10 rounded-[4px] p-6 space-y-6 shadow-xs">
           <h2 className="font-amiri text-xl text-burgundy border-b border-burgundy/10 pb-3">
+            {isRtl ? "التفاصيل والملمس" : "Specifications & Texture"}
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-brown">
+                {isRtl ? "نوع التطريز" : "Embroidery Type"}
+              </label>
+              <input
+                type="text"
+                value={formData.embroideryType}
+                onChange={(e) =>
+                  setFormData({ ...formData, embroideryType: e.target.value })
+                }
+                placeholder={isRtl ? "مثال: تطريز يدوي" : "e.g. Handmade"}
+                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-brown">
+                {isRtl ? "نوع القماش" : "Fabric Type"}
+              </label>
+              <input
+                type="text"
+                value={formData.fabricType}
+                onChange={(e) =>
+                  setFormData({ ...formData, fabricType: e.target.value })
+                }
+                placeholder={isRtl ? "مثال: قطن" : "e.g. Cotton"}
+                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-brown">
+                {isRtl ? "اللون" : "Color"}
+              </label>
+              <input
+                type="text"
+                value={formData.color}
+                onChange={(e) =>
+                  setFormData({ ...formData, color: e.target.value })
+                }
+                placeholder={isRtl ? "مثال: أسود" : "e.g. Black"}
+                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-brown">
+                {isRtl ? "المقاس" : "Size"}
+              </label>
+              <input
+                type="text"
+                value={formData.size}
+                onChange={(e) =>
+                  setFormData({ ...formData, size: e.target.value })
+                }
+                placeholder={isRtl ? "مثال: مقاس واحد" : "e.g. One Size"}
+                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-[#fbf9f6] border border-burgundy/10 rounded-[4px] p-6 space-y-6 shadow-xs">
+          <h2 className="font-amiri text-xl text-burgundy border-b border-burgundy/10 pb-3">
             {isRtl ? "السعر والمخزون والتصنيف" : "Pricing, Stock & Category"}
           </h2>
 
@@ -431,36 +505,6 @@ export default function AdminEditProductPage({ params }: EditProductPageProps) {
               />
             </div>
           </div>
-
-          <div className="pt-2 flex items-center gap-3 border-t border-burgundy/10">
-            <button
-              type="button"
-              onClick={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  isFeatured: !prev.isFeatured,
-                }))
-              }
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                formData.isFeatured ? "bg-olive" : "bg-[#c8beba]"
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-ivory shadow-xs ring-0 transition duration-200 ease-in-out ${
-                  formData.isFeatured
-                    ? isRtl
-                      ? "-translate-x-5"
-                      : "translate-x-5"
-                    : "translate-x-0"
-                }`}
-              />
-            </button>
-            <span className="text-xs font-medium text-brown">
-              {isRtl
-                ? "تثبيت كمنتج مميز (يظهر في القسم الرئيس للموقع)"
-                : "Set as Featured Product (Shown on Home Page)"}
-            </span>
-          </div>
         </div>
 
         <div className="bg-[#fbf9f6] border border-burgundy/10 rounded-[4px] p-6 space-y-6 shadow-xs">
@@ -486,7 +530,6 @@ export default function AdminEditProductPage({ params }: EditProductPageProps) {
             </p>
           </div>
 
-          {/* عرض الصور القديمة والجديدة معاً */}
           {(existingImages.length > 0 || newImagePreviews.length > 0) && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
               {existingImages.map((img, index) => (

@@ -8,9 +8,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request,
   });
 
   const supabase = createServerClient(
@@ -22,47 +20,50 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+
           response = NextResponse.next({
             request,
           });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
+
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
         },
       },
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const isAdminRoute = pathname.includes("/admin");
+  const isAdminRoute = /^\/(?:ar|en)\/admin(?:\/|$)/.test(pathname);
 
   if (isAdminRoute) {
-    const localeMatch = pathname.match(/^\/(ar|en)(\/|$)/);
-    const locale = localeMatch ? localeMatch[1] : defaultLocale;
+    const localeMatch = pathname.match(/^\/(ar|en)(?:\/|$)/);
+    const locale = localeMatch?.[1] ?? defaultLocale;
 
-    if (!user) {
-      return NextResponse.redirect(new URL(`/${locale}`, request.url));
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
     }
 
-    const { data: settingData } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("key", "admin_email")
-      .single();
+    const { data: admin, error: adminError } = await supabase
+      .from("admins")
+      .select("role, is_active")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    const allowedAdminEmail = settingData?.value || process.env.ADMIN_EMAIL;
+    const hasAdminAccess =
+      !adminError &&
+      admin !== null &&
+      admin.is_active === true &&
+      ["owner", "admin"].includes(admin.role);
 
-    const isAuthorized =
-      allowedAdminEmail &&
-      user.email?.toLowerCase() === allowedAdminEmail.toLowerCase();
-
-    if (!isAuthorized) {
+    if (!hasAdminAccess) {
       return NextResponse.redirect(new URL(`/${locale}`, request.url));
     }
   }
@@ -71,10 +72,14 @@ export async function middleware(request: NextRequest) {
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   );
 
-  if (pathnameHasLocale) return response;
+  if (pathnameHasLocale) {
+    return response;
+  }
 
-  request.nextUrl.pathname = `/${defaultLocale}${pathname}`;
-  return NextResponse.redirect(request.nextUrl);
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = `/${defaultLocale}${pathname}`;
+
+  return NextResponse.redirect(redirectUrl);
 }
 
 export const config = {
