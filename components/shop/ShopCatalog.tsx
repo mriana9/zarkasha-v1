@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, Sparkles, Loader2, ArrowUpDown } from "lucide-react";
+import { Search, Sparkles, Loader2, ArrowUpDown, SlidersHorizontal } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ProductCard } from "./ProductCard";
 
@@ -24,6 +24,10 @@ interface Product {
   images: string[];
   is_featured: boolean;
   category_id: string;
+  embroidery_type?: string | null;
+  fabric_type?: string | null;
+  color?: string | null;
+  size?: string | null;
   categories: CategoryOption | null;
 }
 
@@ -38,6 +42,14 @@ interface ShopCatalogProps {
     sortDefault: string;
     emptyTitle: string;
     emptyDesc: string;
+    filters?: {
+      title: string;
+      embroidery: string;
+      fabric: string;
+      color: string;
+      all: string;
+      clear: string;
+    };
   };
   locale: "ar" | "en";
 }
@@ -57,18 +69,26 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
     param: categoryParam,
     value: categoryParam || "all",
   });
+
   if (categorySelection.param !== categoryParam) {
     setCategorySelection({
       param: categoryParam,
       value: categoryParam || "all",
     });
   }
+
   const activeCategory = categorySelection.value;
   const setActiveCategory = (value: string) => {
     setCategorySelection({ param: categoryParam, value });
   };
+
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<SortOption>("default");
+  
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterEmbroidery, setFilterEmbroidery] = useState("all");
+  const [filterFabric, setFilterFabric] = useState("all");
+  const [filterColor, setFilterColor] = useState("all");
 
   useEffect(() => {
     async function fetchData() {
@@ -94,7 +114,7 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
             name_en,
             slug
           )
-        `,
+        `
         )
         .eq("is_visible", true);
 
@@ -127,8 +147,18 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
 
   const filteredProducts = products.filter((p) => {
     const title = isRtl ? p.title_ar : p.title_en;
-    return title.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (filterEmbroidery !== "all" && p.embroidery_type !== filterEmbroidery) return false;
+    if (filterFabric !== "all" && p.fabric_type !== filterFabric) return false;
+    if (filterColor !== "all" && p.color !== filterColor) return false;
+
+    return true;
   });
+
+  const uniqueEmbroidery = Array.from(new Set(products.map(p => p.embroidery_type).filter(Boolean))) as string[];
+  const uniqueFabric = Array.from(new Set(products.map(p => p.fabric_type).filter(Boolean))) as string[];
+  const uniqueColor = Array.from(new Set(products.map(p => p.color).filter(Boolean))) as string[];
 
   const toggleSort = () => {
     if (sortOrder === "default") {
@@ -148,6 +178,12 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
       return isRtl ? "السعر: من الأعلى للأقل" : "Price: High to Low";
     }
     return dict.sortDefault;
+  };
+
+  const resetFilters = () => {
+    setFilterEmbroidery("all");
+    setFilterFabric("all");
+    setFilterColor("all");
   };
 
   return (
@@ -222,6 +258,16 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
               className="w-full border-0 outline-0 bg-transparent text-[#231916] text-xs font-tajawal placeholder:text-[#a0928d]"
             />
           </div>
+          
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="px-4 py-2 text-[#5d1826] border border-[#5d1826]/16 bg-transparent text-xs cursor-pointer font-tajawal rounded-[2px] flex items-center justify-center gap-2 hover:bg-[#5d1826]/5 transition-colors"
+            type="button"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>{dict.filters?.title || (isRtl ? "تصفية" : "Filter")}</span>
+          </button>
+
           <button
             onClick={toggleSort}
             className="min-w-[150px] px-4 py-2 text-[#5d1826] border border-[#5d1826]/16 bg-transparent text-xs cursor-pointer font-tajawal rounded-[2px] flex items-center justify-center gap-2 hover:bg-[#5d1826]/5 transition-colors"
@@ -232,6 +278,43 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
           </button>
         </div>
       </div>
+
+      {isFilterOpen && (
+        <div className="mb-[42px] p-6 bg-[#fbf9f6] border border-[#5d1826]/10 rounded-[4px] grid grid-cols-1 md:grid-cols-3 gap-6">
+          {uniqueEmbroidery.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-[#5d1826] mb-2">{dict.filters?.embroidery || (isRtl ? "نوع التطريز" : "Embroidery")}</label>
+              <select value={filterEmbroidery} onChange={(e) => setFilterEmbroidery(e.target.value)} className="w-full h-10 px-3 bg-white border border-[#5d1826]/20 rounded-[3px] text-xs text-[#231916] outline-none">
+                <option value="all">{dict.filters?.all || (isRtl ? "الكل" : "All")}</option>
+                {uniqueEmbroidery.map(val => <option key={val} value={val}>{val}</option>)}
+              </select>
+            </div>
+          )}
+          {uniqueFabric.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-[#5d1826] mb-2">{dict.filters?.fabric || (isRtl ? "نوع القماش" : "Fabric")}</label>
+              <select value={filterFabric} onChange={(e) => setFilterFabric(e.target.value)} className="w-full h-10 px-3 bg-white border border-[#5d1826]/20 rounded-[3px] text-xs text-[#231916] outline-none">
+                <option value="all">{dict.filters?.all || (isRtl ? "الكل" : "All")}</option>
+                {uniqueFabric.map(val => <option key={val} value={val}>{val}</option>)}
+              </select>
+            </div>
+          )}
+          {uniqueColor.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-[#5d1826] mb-2">{dict.filters?.color || (isRtl ? "اللون" : "Color")}</label>
+              <select value={filterColor} onChange={(e) => setFilterColor(e.target.value)} className="w-full h-10 px-3 bg-white border border-[#5d1826]/20 rounded-[3px] text-xs text-[#231916] outline-none">
+                <option value="all">{dict.filters?.all || (isRtl ? "الكل" : "All")}</option>
+                {uniqueColor.map(val => <option key={val} value={val}>{val}</option>)}
+              </select>
+            </div>
+          )}
+          <div className="col-span-full flex justify-end mt-2">
+            <button onClick={resetFilters} className="text-xs text-[#887a75] hover:text-[#5d1826] underline">
+              {dict.filters?.clear || (isRtl ? "مسح التصفية" : "Clear filters")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="min-h-[360px] flex items-center justify-center">
@@ -266,6 +349,7 @@ export function ShopCatalog({ dict, locale }: ShopCatalogProps) {
                 setSearchQuery("");
                 setActiveCategory("all");
                 setSortOrder("default");
+                resetFilters();
               }}
             >
               {isRtl ? "عرض كل القطع" : "Show all pieces"}

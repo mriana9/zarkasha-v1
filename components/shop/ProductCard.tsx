@@ -18,6 +18,10 @@ interface ProductCardProps {
     stock: number;
     images?: string[];
     is_featured?: boolean;
+    embroidery_type?: string | null;
+    fabric_type?: string | null;
+    color?: string | null;
+    size?: string | null;
     categories?: {
       name_ar: string;
       name_en: string;
@@ -119,6 +123,20 @@ export function ProductCard({
             <h3 className="font-amiri text-xl text-[#5d1826] font-normal leading-snug">
               {title}
             </h3>
+            {(product.embroidery_type || product.color) && (
+              <p className="text-[10px] text-[#887a75] font-tajawal mt-1 flex flex-wrap gap-1.5">
+                {product.embroidery_type && (
+                  <span className="inline-block px-1.5 py-0.5 bg-[#fbf9f6] border border-[#5d1826]/10 rounded-[2px]">
+                    {product.embroidery_type}
+                  </span>
+                )}
+                {product.color && (
+                  <span className="inline-block px-1.5 py-0.5 bg-[#fbf9f6] border border-[#5d1826]/10 rounded-[2px]">
+                    {product.color}
+                  </span>
+                )}
+              </p>
+            )}
           </div>
 
           <button

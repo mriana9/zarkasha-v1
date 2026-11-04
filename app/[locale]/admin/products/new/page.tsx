@@ -48,7 +48,10 @@ export default function AdminNewProductPage({
     descriptionEn: "",
     price: "",
     stock: "1",
-    isFeatured: false,
+    embroideryType: "",
+    fabricType: "",
+    color: "",
+    size: "",
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -183,8 +186,11 @@ export default function AdminNewProductPage({
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock) || 0,
           images: uploadedImageUrls,
-          is_featured: formData.isFeatured,
           is_visible: true,
+          embroidery_type: formData.embroideryType || null,
+          fabric_type: formData.fabricType || null,
+          color: formData.color || null,
+          size: formData.size || null,
         },
       ]);
 
@@ -348,6 +354,74 @@ export default function AdminNewProductPage({
 
         <div className="bg-[#fbf9f6] border border-burgundy/10 rounded-[4px] p-6 space-y-6 shadow-xs">
           <h2 className="font-amiri text-xl text-burgundy border-b border-burgundy/10 pb-3">
+            {isRtl ? "التفاصيل والملمس" : "Specifications & Texture"}
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-brown">
+                {isRtl ? "نوع التطريز" : "Embroidery Type"}
+              </label>
+              <input
+                type="text"
+                value={formData.embroideryType}
+                onChange={(e) =>
+                  setFormData({ ...formData, embroideryType: e.target.value })
+                }
+                placeholder={isRtl ? "مثال: تطريز يدوي" : "e.g. Handmade"}
+                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-brown">
+                {isRtl ? "نوع القماش" : "Fabric Type"}
+              </label>
+              <input
+                type="text"
+                value={formData.fabricType}
+                onChange={(e) =>
+                  setFormData({ ...formData, fabricType: e.target.value })
+                }
+                placeholder={isRtl ? "مثال: قطن" : "e.g. Cotton"}
+                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-brown">
+                {isRtl ? "اللون" : "Color"}
+              </label>
+              <input
+                type="text"
+                value={formData.color}
+                onChange={(e) =>
+                  setFormData({ ...formData, color: e.target.value })
+                }
+                placeholder={isRtl ? "مثال: أسود" : "e.g. Black"}
+                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-brown">
+                {isRtl ? "المقاس" : "Size"}
+              </label>
+              <input
+                type="text"
+                value={formData.size}
+                onChange={(e) =>
+                  setFormData({ ...formData, size: e.target.value })
+                }
+                placeholder={isRtl ? "مثال: مقاس واحد" : "e.g. One Size"}
+                className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-[#fbf9f6] border border-burgundy/10 rounded-[4px] p-6 space-y-6 shadow-xs">
+          <h2 className="font-amiri text-xl text-burgundy border-b border-burgundy/10 pb-3">
             {isRtl ? "السعر والمخزون والتصنيف" : "Pricing, Stock & Category"}
           </h2>
 
@@ -415,36 +489,6 @@ export default function AdminNewProductPage({
                 className="w-full h-11 px-4 bg-ivory border border-burgundy/15 rounded-[3px] text-xs text-brown outline-none focus:border-burgundy"
               />
             </div>
-          </div>
-
-          <div className="pt-2 flex items-center gap-3 border-t border-burgundy/10">
-            <button
-              type="button"
-              onClick={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  isFeatured: !prev.isFeatured,
-                }))
-              }
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                formData.isFeatured ? "bg-olive" : "bg-[#c8beba]"
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-ivory shadow-xs ring-0 transition duration-200 ease-in-out ${
-                  formData.isFeatured
-                    ? isRtl
-                      ? "-translate-x-5"
-                      : "translate-x-5"
-                    : "translate-x-0"
-                }`}
-              />
-            </button>
-            <span className="text-xs font-medium text-brown">
-              {isRtl
-                ? "تثبيت كمنتج مميز (يظهر في القسم الرئيس للموقع)"
-                : "Set as Featured Product (Shown on Home Page)"}
-            </span>
           </div>
         </div>
 

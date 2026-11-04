@@ -16,6 +16,10 @@ interface ProductQuickViewModalProps {
     stock: number;
     images?: string[];
     is_featured?: boolean;
+    embroidery_type?: string | null;
+    fabric_type?: string | null;
+    color?: string | null;
+    size?: string | null;
     categories?: {
       name_ar: string;
       name_en: string;
@@ -111,6 +115,23 @@ export function ProductQuickViewModal({
 
     const imageUrl = getAbsoluteUrl(activeImageSrc);
 
+    const specsText = [
+      product.embroidery_type
+        ? `🪡 ${locale === "ar" ? "التطريز" : "Embroidery"}: ${product.embroidery_type}`
+        : "",
+      product.fabric_type
+        ? `🧵 ${locale === "ar" ? "القماش" : "Fabric"}: ${product.fabric_type}`
+        : "",
+      product.color
+        ? `🎨 ${locale === "ar" ? "اللون" : "Color"}: ${product.color}`
+        : "",
+      product.size
+        ? `📏 ${locale === "ar" ? "المقاس" : "Size"}: ${product.size}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
     const message =
       locale === "ar"
         ? [
@@ -121,6 +142,7 @@ export function ProductQuickViewModal({
             `🪡 *${title}*`,
             `💰 *السعر:* ${product.price} شيكل`,
             ...(categoryName ? [`🏷️ *التصنيف:* ${categoryName}`] : []),
+            ...(specsText ? [specsText] : []),
             "",
             "🖼️ *صورة المنتج:*",
             imageUrl,
@@ -137,6 +159,7 @@ export function ProductQuickViewModal({
             `🪡 *${title}*`,
             `💰 *Price:* ${product.price} ILS`,
             ...(categoryName ? [`🏷️ *Category:* ${categoryName}`] : []),
+            ...(specsText ? [specsText] : []),
             "",
             "🔗 *View the product and details:*",
             productUrl,
@@ -277,6 +300,46 @@ export function ProductQuickViewModal({
                   ? "لا يوجد وصف متاح حالياً."
                   : "No description available.")}
             </p>
+
+            {(product.embroidery_type ||
+              product.fabric_type ||
+              product.color ||
+              product.size) && (
+              <div className="flex flex-wrap gap-2 py-2">
+                {product.embroidery_type && (
+                  <span className="inline-flex items-center px-2 py-1 bg-[#fbf9f6] border border-[#5d1826]/10 rounded-[3px] text-[10px] text-[#5d1826]">
+                    <strong className="me-1">
+                      {locale === "ar" ? "التطريز:" : "Embroidery:"}
+                    </strong>{" "}
+                    {product.embroidery_type}
+                  </span>
+                )}
+                {product.fabric_type && (
+                  <span className="inline-flex items-center px-2 py-1 bg-[#fbf9f6] border border-[#5d1826]/10 rounded-[3px] text-[10px] text-[#5d1826]">
+                    <strong className="me-1">
+                      {locale === "ar" ? "القماش:" : "Fabric:"}
+                    </strong>{" "}
+                    {product.fabric_type}
+                  </span>
+                )}
+                {product.color && (
+                  <span className="inline-flex items-center px-2 py-1 bg-[#fbf9f6] border border-[#5d1826]/10 rounded-[3px] text-[10px] text-[#5d1826]">
+                    <strong className="me-1">
+                      {locale === "ar" ? "اللون:" : "Color:"}
+                    </strong>{" "}
+                    {product.color}
+                  </span>
+                )}
+                {product.size && (
+                  <span className="inline-flex items-center px-2 py-1 bg-[#fbf9f6] border border-[#5d1826]/10 rounded-[3px] text-[10px] text-[#5d1826]">
+                    <strong className="me-1">
+                      {locale === "ar" ? "المقاس:" : "Size:"}
+                    </strong>{" "}
+                    {product.size}
+                  </span>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center justify-between pt-2 border-t border-[#5d1826]/10">
               <span className="text-sm font-semibold text-[#5d1826]">
